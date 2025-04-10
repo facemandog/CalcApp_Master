@@ -275,16 +275,14 @@
      }
 
     /* Section ID in top-right */
-    .section-id {
-      position: absolute;
-      top: 8px;
-      right: 12px;
-      font-weight: bold;
-      color: var(--primary-color);
-      font-size: 0.9em;
-      background-color: rgba(0,0,0,0.5); /* Semi-transparent background */
-      padding: 2px 5px;
-      border-radius: 2px;
+    .section-header {
+        display: flex;
+        justify-content: center; /* <<< CHANGE: Center items horizontally */
+        align-items: center;
+        margin-bottom: 1em;
+        /* Optional: border */
+        /* border-bottom: 1px dashed #555; */
+        /* padding-bottom: 0.5em; */
     }
     #roughEstimateContainer h2 {
         margin-bottom: 1em; /* Add space below heading */
