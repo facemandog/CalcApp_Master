@@ -1,0 +1,135 @@
+{
+  "doorPricing": {
+    "Shaker": {
+      "Painted": 49.05,
+      "Primed": 30.45,
+      "Unfinished": 16.50
+    },
+    "Slab": {
+      "Painted": 49.05,
+      "Primed": 30.45,
+      "Unfinished": 16.50
+    },
+    "Chamfer": {
+      "Painted": 49.74,
+      "Primed": 31.29,
+      "Unfinished": 17.14
+    },
+    "Savannah": {
+      "Painted": 49.74,
+      "Primed": 31.29,
+      "Unfinished": 17.14
+    },
+    "Beaded": {
+      "Painted": 51.09,
+      "Primed": 32.92,
+      "Unfinished": 18.79
+    },
+    "Stepped": {
+      "Painted": 51.09,
+      "Primed": 32.92,
+      "Unfinished": 18.79
+    },
+    "Ruth": {
+      "Painted": 51.09,
+      "Primed": 32.92,
+      "Unfinished": 18.79
+    },
+    "Maisie": {
+      "Painted": 51.09,
+      "Primed": 32.92,
+      "Unfinished": 18.79
+    },
+    "Mavis": {
+      "Painted": 51.09,
+      "Primed": 32.92,
+      "Unfinished": 18.79
+    },
+    "Dorothy": {
+      "Painted": 51.09,
+      "Primed": 32.92,
+      "Unfinished": 18.79
+    },
+    "Raised Panel": {
+      "Painted": 51.99,
+      "Primed": 34.01,
+      "Unfinished": 19.20
+    },
+    "Split Shaker": {
+      "Painted": 51.99,
+      "Primed": 34.01,
+      "Unfinished": 19.20
+    },
+    "Jean": {
+      "Painted": 51.99,
+      "Primed": 34.01,
+      "Unfinished": 19.20
+    },
+    "Nora": {
+      "Painted": 51.99,
+      "Primed": 34.01,
+      "Unfinished": 19.20
+    },
+    "Amelia": {
+      "Painted": 51.99,
+      "Primed": 34.01,
+      "Unfinished": 19.20
+    },
+    "Millie": {
+      "Painted": 51.99,
+      "Primed": 34.01,
+      "Unfinished": 19.20
+    },
+    "Glass": {
+      "Painted": 73.58,
+      "Primed": 45.68,
+      "Unfinished": 24.75
+    },
+    "Frances": {
+      "Painted": 73.58,
+      "Primed": 45.68,
+      "Unfinished": 24.75
+    },
+    "Alice": {
+      "Painted": 73.58,
+      "Primed": 45.68,
+      "Unfinished": 24.75
+    },
+    "Mabel": {
+      "Painted": 52.89,
+      "Primed": 35.09,
+      "Unfinished": 20.02
+    },
+    "Bessie": {
+      "Painted": 52.89,
+      "Primed": 35.09,
+      "Unfinished": 20.02
+    },
+    "Winona": {
+      "Painted": 52.89,
+      "Primed": 35.09,
+      "Unfinished": 20.02
+    },
+    "Eleanor": {
+      "Painted": 52.89,
+      "Primed": 35.09,
+      "Unfinished": 20.02
+    },
+    "Georgia": {
+      "Painted": 52.89,
+      "Primed": 35.09,
+      "Unfinished": 20.02
+    }
+  },
+  "hingeCosts": {
+    "0-36": 13,
+    "36.01-60": 16.5,
+    "60.01-82": 20
+  },
+  "lazySusan": {
+    "price": 50
+  },
+  "customPaint": {
+    "price": 200
+  }
+}

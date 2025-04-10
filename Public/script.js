@@ -54,6 +54,9 @@ function getSectionData(sectionDiv) {
   };
 }
 
+// Forward declaration of updateTotals
+let updateTotals;
+
 /**
  * Creates a dynamic Rough Estimate section.
  * @param {number} index - The section index.
@@ -91,31 +94,43 @@ function createRoughEstimateSection(index) {
         <option value="Unfinished">Unfinished</option>
       </select>
     </label>
-    <label>
-      Height (in):
-      <input type="number" name="sectionHeight" value="12" step="0.1" required />
-    </label>
-    <label class="half-width">
-      Width (in):
-      <input type="number" name="sectionWidth" value="12" step="0.1" required />
-    </label>
-  `;
-  
+    <div class="dimension-inputs">
+      <label>
+        Height (in):
+        <input type="number" name="sectionHeight" value="12" step="0.1" required />
+      </label>
+      <label>
+        Width (in):
+        <input type="number" name="sectionWidth" value="12" step="0.1" required />
+      </label>
+    </div>
+  `; // Wrapped height/width in div for better styling potential
+
   if (index > 0) {
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.textContent = 'Remove';
-    removeBtn.style.backgroundColor = 'red';
-    removeBtn.style.color = 'white';
-    removeBtn.style.borderRadius = '1px';
-    removeBtn.style.marginTop = '0.5em';
-    removeBtn.style.marginLeft = '4.8em';
+    removeBtn.className = 'remove-button'; // Apply class for styling
     removeBtn.addEventListener('click', () => {
       sectionDiv.remove();
       updateSectionIndices();
+      if (typeof updateTotals === 'function') {
+        updateTotals(); // Recalculate totals when a section is removed
+      }
     });
     sectionDiv.appendChild(removeBtn);
   }
+
+  // Add event listeners to recalculate totals when section inputs change
+  sectionDiv.querySelectorAll('input, select').forEach(input => {
+    input.addEventListener('change', () => {
+         if (typeof updateTotals === 'function') updateTotals();
+    });
+    input.addEventListener('input', () => { // Also listen for input event for numbers
+         if (typeof updateTotals === 'function') updateTotals();
+    });
+  });
+
   return sectionDiv;
 }
 
@@ -147,11 +162,18 @@ function loadPricingSettings() {
     const input = document.querySelector(`input[name="${fieldName}"]`);
     if (input) {
       const savedValue = localStorage.getItem(fieldName);
-      if (savedValue !== null) {
+      if (savedValue !== null && savedValue !== "") {
         input.value = savedValue;
+      } else {
+          const defaultValue = input.getAttribute('value');
+          if (defaultValue !== null) {
+              input.value = defaultValue;
+              localStorage.setItem(fieldName, defaultValue);
+          }
       }
     }
   });
+  saveCurrentPriceSetupValues();
 }
 
 /**
@@ -160,19 +182,73 @@ function loadPricingSettings() {
  */
 function savePricingSetting(e) {
   localStorage.setItem(e.target.name, e.target.value);
+  saveCurrentPriceSetupValues();
 }
+
+/** Helper function to save the current state of price setup inputs for clearAll restoration */
+function saveCurrentPriceSetupValues() {
+    const priceSetupValues = {};
+    document.querySelectorAll('#priceSetupContainer input').forEach(input => {
+        priceSetupValues[input.name] = input.value;
+    });
+    localStorage.setItem('priceSetupValues', JSON.stringify(priceSetupValues));
+}
+
+// Helper function to format currency
+function formatCurrency(value) {
+    const number = Number(value);
+    if (isNaN(number)) {
+        return '$0.00';
+    }
+    return number.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
   const sectionsContainer = document.getElementById('sectionsContainer');
   const addSectionBtn = document.getElementById('addSectionBtn');
   const calcForm = document.getElementById('calcForm');
+  const priceSetupContainer = document.getElementById('priceSetupContainer'); // Get the container
   const togglePriceSetupBtn = document.getElementById('togglePriceSetupBtn');
-  const priceSetupContent = document.getElementById('priceSetupContent');
+  const priceSetupContent = document.getElementById('priceSetupContent'); // Inner content div
   const clearAllBtn = document.getElementById('clearAllBtn');
-  
+  const resultsDiv = document.getElementById('results');
+  const printBtnContainer = document.getElementById('printButtonContainer');
+
+  /**
+   * Function to update global totals based on form inputs
+   * and compute preliminary installation details.
+   */
+  updateTotals = function() { // Assign to the previously declared variable
+    const sections = document.querySelectorAll('#sectionsContainer .section');
+    let totalSqFt = 0;
+    sections.forEach(sec => {
+      const height = parseFloat(sec.querySelector('input[name="sectionHeight"]').value) || 0;
+      const width = parseFloat(sec.querySelector('input[name="sectionWidth"]').value) || 0;
+      totalSqFt += (height * width) / 144;
+    });
+    globalTotalSqFt = totalSqFt;
+
+    const doors0 = parseInt(document.querySelector('input[name="doors_0_36"]').value) || 0;
+    const doors36 = parseInt(document.querySelector('input[name="doors_36_60"]').value) || 0;
+    const doors60 = parseInt(document.querySelector('input[name="doors_60_82"]').value) || 0;
+    globalTotalDoors = doors0 + doors36 + doors60;
+
+    globalTotalDrawers = parseInt(document.querySelector('input[name="numDrawers"]').value) || 0;
+
+    const pricePerDoor = parseFloat(document.querySelector('input[name="pricePerDoor"]').value) || 0;
+    const pricePerDrawer = parseFloat(document.querySelector('input[name="pricePerDrawer"]').value) || 0;
+    const pricePerLazySusan = parseFloat(document.querySelector('input[name="pricePerLazySusan"]').value) || 0;
+
+    globalDoorInstallCost = globalTotalDoors * pricePerDoor;
+    globalDrawerInstallCost = globalTotalDrawers * pricePerDrawer;
+    const lazySusanQty = parseInt(document.querySelector('input[name="lazySusanQty"]').value) || 0;
+    globalLazySusanInstallCost = lazySusanQty * pricePerLazySusan;
+  };
+
   // Load pricing settings from localStorage.
   loadPricingSettings();
-  
+
   // Attach change listeners to pricing input fields.
   const pricingFields = [
     'pricePerDoor',
@@ -186,120 +262,113 @@ document.addEventListener('DOMContentLoaded', () => {
     const input = document.querySelector(`input[name="${fieldName}"]`);
     if (input) {
       input.addEventListener('change', savePricingSetting);
+      input.addEventListener('input', savePricingSetting);
     }
   });
-  
-  // Price Setup Toggle: only hide/show the inner content.
+
+  // --- MODIFIED Price Setup Toggle Logic ---
   togglePriceSetupBtn.addEventListener('click', () => {
-    if (priceSetupContent.style.display === 'none' || priceSetupContent.style.display === '') {
-      priceSetupContent.style.display = 'block';
-      togglePriceSetupBtn.textContent = 'Hide Price Setup';
+    const isCollapsed = priceSetupContainer.classList.contains('collapsed');
+
+    if (isCollapsed) {
+        // Expand
+        priceSetupContainer.classList.remove('collapsed');
+        // No need to explicitly show priceSetupContent, CSS handles it
+        togglePriceSetupBtn.textContent = 'Hide Prices';
     } else {
-      priceSetupContent.style.display = 'none';
-      togglePriceSetupBtn.textContent = 'Show Price Setup';
+        // Collapse
+        priceSetupContainer.classList.add('collapsed');
+        // priceSetupContent display is handled by CSS within .collapsed
+        togglePriceSetupBtn.textContent = 'Show Prices';
     }
   });
-  
+
   // Initialize with 2 Rough Estimate sections.
   function initializeSections() {
     sectionsContainer.innerHTML = '';
     for (let i = 0; i < 2; i++) {
       sectionsContainer.appendChild(createRoughEstimateSection(i));
     }
+    updateTotals();
   }
   initializeSections();
-  
+
   addSectionBtn.addEventListener('click', () => {
     const index = sectionsContainer.children.length;
     sectionsContainer.appendChild(createRoughEstimateSection(index));
-  });
-  
-  // Function to update totals and compute installation details.
-  const updateTotals = () => {
-    // Compute total square footage from dynamic sections.
-    const sections = document.querySelectorAll('#sectionsContainer .section');
-    let totalSqFt = 0;
-    sections.forEach(sec => {
-      const height = parseFloat(sec.querySelector('input[name="sectionHeight"]').value) || 0;
-      const width = parseFloat(sec.querySelector('input[name="sectionWidth"]').value) || 0;
-      totalSqFt += (height * width) / 144;
-    });
-    globalTotalSqFt = totalSqFt;
-    
-    // Compute Total Doors from Piece Count inputs.
-    const doors0 = parseInt(document.querySelector('input[name="doors_0_36"]').value) || 0;
-    const doors36 = parseInt(document.querySelector('input[name="doors_36_60"]').value) || 0;
-    const doors60 = parseInt(document.querySelector('input[name="doors_60_82"]').value) || 0;
-    globalTotalDoors = doors0 + doors36 + doors60;
-    
-    // Total Drawers.
-    globalTotalDrawers = parseInt(document.querySelector('input[name="numDrawers"]').value) || 0;
-    
-    // Get Price Setup values.
-    const pricePerDoor = parseFloat(document.querySelector('input[name="pricePerDoor"]').value) || 0;
-    const pricePerDrawer = parseFloat(document.querySelector('input[name="pricePerDrawer"]').value) || 0;
-    const pricePerLazySusan = parseFloat(document.querySelector('input[name="pricePerLazySusan"]').value) || 0;
-    
-    // Compute installation details.
-    globalDoorInstallCost = globalTotalDoors * pricePerDoor;
-    globalDrawerInstallCost = globalTotalDrawers * pricePerDrawer;
-    const lazySusanQty = parseInt(document.querySelector('input[name="lazySusanQty"]').value) || 0;
-    globalLazySusanInstallCost = lazySusanQty * pricePerLazySusan;
-  };
-  
-  // Attach event listeners to update totals on input change.
-  document.querySelectorAll('input').forEach(input => {
-    input.addEventListener('input', updateTotals);
-  });
-  updateTotals();
-  
-  // Clear All button functionality.
-  clearAllBtn.addEventListener('click', () => {
-    // Save Price Setup values.
-    const priceSetupInputs = document.querySelectorAll('#priceSetupContent input');
-    let priceSetupValues = {};
-    priceSetupInputs.forEach(input => {
-      priceSetupValues[input.name] = input.value;
-    });
-    
-    // Reset form excluding Price Setup fields.
-    calcForm.reset();
-    
-    // Reinitialize dynamic sections.
-    initializeSections();
-    
-    // Set default values for Piece Count and Special Features.
-    document.querySelector('input[name="numDrawers"]').value = "0";
-    document.querySelector('input[name="doors_0_36"]').value = "0";
-    document.querySelector('input[name="doors_36_60"]').value = "0";
-    document.querySelector('input[name="doors_60_82"]').value = "0";
-    document.querySelector('input[name="customPaintQty"]').value = "0";
-    
-    // Restore Price Setup values.
-    priceSetupInputs.forEach(input => {
-      if (priceSetupValues[input.name] !== undefined) {
-        input.value = priceSetupValues[input.name];
-      }
-    });
-    
     updateTotals();
   });
-  
+
+
+  // Attach event listeners to update totals on input change for non-section inputs.
+   document.querySelectorAll('#hingeDrilling input, #priceSetupContent input, #specialFeatures input, #disposalCost input').forEach(input => {
+       input.addEventListener('input', updateTotals);
+       input.addEventListener('change', updateTotals);
+   });
+
+
+  // Clear All button functionality.
+  clearAllBtn.addEventListener('click', () => {
+    // Reset form elements excluding Price Setup
+    document.querySelectorAll('#roughEstimateContainer, #otherPartsContainer').forEach(container => {
+        container.querySelectorAll('input, select').forEach(el => {
+            if (el.tagName === 'INPUT') {
+                const type = el.type.toLowerCase();
+                if (type === 'number') el.value = el.getAttribute('value') || '0';
+                else if (type === 'text') el.value = '';
+            } else if (el.tagName === 'SELECT') {
+                el.selectedIndex = 0;
+            }
+        });
+    });
+
+    // Explicitly reset counts to 0
+     document.querySelector('input[name="numDrawers"]').value = "0";
+     document.querySelector('input[name="doors_0_36"]').value = "0";
+     document.querySelector('input[name="doors_36_60"]').value = "0";
+     document.querySelector('input[name="doors_60_82"]').value = "0";
+     document.querySelector('input[name="lazySusanQty"]').value = "0";
+     document.querySelector('input[name="customPaintQty"]').value = "0";
+     document.querySelector('input[name="doorDisposalQty"]').value = "0";
+     document.querySelector('input[name="lazySusanDisposalQty"]').value = "0";
+
+    // Reinitialize dynamic sections
+    initializeSections();
+
+    // Restore Price Setup values from saved object
+    const priceSetupValues = JSON.parse(localStorage.getItem('priceSetupValues') || '{}');
+    document.querySelectorAll('#priceSetupContainer input').forEach(input => {
+        input.value = priceSetupValues[input.name] !== undefined ? priceSetupValues[input.name] : (input.getAttribute('value') || '');
+    });
+
+    // Ensure Price Setup is expanded after clear
+    priceSetupContainer.classList.remove('collapsed');
+    togglePriceSetupBtn.textContent = 'Hide Prices';
+
+    // Clear results
+    resultsDiv.innerHTML = '';
+    printBtnContainer.style.display = 'none';
+
+    updateTotals();
+  });
+
+
   // On form submit, build the payload and send it.
   calcForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    updateTotals();
+
     const sections = [];
-    const sectionDivs = document.querySelectorAll('#sectionsContainer .section');
-    sectionDivs.forEach(sec => {
-      sections.push({
-        doorStyle: sec.querySelector('select[name="sectionDoorStyle"]').value,
-        drawerStyle: sec.querySelector('select[name="sectionDrawerStyle"]').value,
-        finish: sec.querySelector('select[name="sectionFinish"]').value,
-        height: parseFloat(sec.querySelector('input[name="sectionHeight"]').value) || 0,
-        width: parseFloat(sec.querySelector('input[name="sectionWidth"]').value) || 0
-      });
+    document.querySelectorAll('#sectionsContainer .section').forEach(sec => {
+        sections.push({
+            doorStyle: sec.querySelector('select[name="sectionDoorStyle"]').value,
+            drawerStyle: sec.querySelector('select[name="sectionDrawerStyle"]').value,
+            finish: sec.querySelector('select[name="sectionFinish"]').value,
+            height: parseFloat(sec.querySelector('input[name="sectionHeight"]').value) || 0,
+            width: parseFloat(sec.querySelector('input[name="sectionWidth"]').value) || 0
+        });
     });
-    
+
     const formData = new FormData(e.target);
     const payload = {
       sections: sections,
@@ -323,137 +392,147 @@ document.addEventListener('DOMContentLoaded', () => {
         refinishingCostPerSqFt: parseFloat(formData.get('refinishingCostPerSqFt')) || 0,
         pricePerLazySusan: parseFloat(formData.get('pricePerLazySusan')) || 0,
         onSiteMeasuring: parseFloat(formData.get('onSiteMeasuring')) || 0,
-        doorDisposalCost: parseFloat(formData.get('doorDisposalCost')) || 0
+        doorDisposalCost: parseFloat(formData.get('doorDisposalCost')) || 0,
+        onSiteMeasuringSqFt: globalTotalSqFt
       },
       disposal: {
         doorDisposalQty: parseInt(formData.get('doorDisposalQty')) || 0,
         lazySusanDisposalQty: parseInt(formData.get('lazySusanDisposalQty')) || 0
       }
     };
-    
+
     try {
+      resultsDiv.textContent = 'Calculating...';
       const response = await fetch('/calculate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+      if (!response.ok) {
+            let errorMsg = `HTTP error! status: ${response.status}`;
+            try {
+                const errorData = await response.json();
+                if (errorData && errorData.error) errorMsg += ` - ${errorData.error}`;
+                else errorMsg += ` - Server error details unavailable.`;
+            } catch (e) { errorMsg += ` - Could not parse error response.`; }
+          throw new Error(errorMsg);
+      }
       const resultData = await response.json();
       displayResults(resultData);
+       printBtnContainer.style.display = 'block';
     } catch (err) {
-      document.getElementById('results').textContent = 'Error: ' + err.message;
+      resultsDiv.innerHTML = `<div class="invoice-error"><p><strong>Error Calculating Estimate:</strong></p><p>${err.message}</p></div>`;
+       printBtnContainer.style.display = 'none';
+       console.error("Calculation Error Full:", err);
     }
   });
-  
-  // Updated displayResults function with an invoice-style layout and a toggle button for Installation Details.
+
+  // Display results in a professional invoice style.
   function displayResults(resultData) {
     if (resultData.error) {
-      document.getElementById('results').innerHTML = `<h2>Error:</h2><p>${resultData.error}</p>`;
+      resultsDiv.innerHTML = `<div class="invoice-error"><p><strong>Error from Server:</strong></p><p>${resultData.error}</p></div>`;
+      printBtnContainer.style.display = 'none';
       return;
     }
-    
-    // Format today's date.
+
     const today = new Date();
-    const dateStr = today.toLocaleDateString();
-    
-    // Extract calculated values.
-    let overall = (typeof resultData.overallTotal === 'number' && !isNaN(resultData.overallTotal))
-      ? resultData.overallTotal.toFixed(2)
-      : "0.00";
-    let allSectionsCost = (typeof resultData.doorCostTotal === 'number' && !isNaN(resultData.doorCostTotal))
-      ? resultData.doorCostTotal.toFixed(2)
-      : "0.00";
-    let costToInstaller = (typeof resultData.costToInstaller === 'number' && !isNaN(resultData.costToInstaller))
-      ? resultData.costToInstaller.toFixed(2)
-      : "0.00";
-    let profitMargin = (typeof resultData.profitMargin === 'number' && !isNaN(resultData.profitMargin))
-      ? resultData.profitMargin.toFixed(2)
-      : "0.00";
-    
-    // Build invoice-style layout.
+    const dateStr = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const overallTotal = formatCurrency(resultData.overallTotal);
+    const allSectionsCost = formatCurrency(resultData.doorCostTotal);
+    const hingeCost = formatCurrency(resultData.hingeCost);
+    const refinishingCost = formatCurrency(resultData.refinishingCost);
+    const measuringCost = formatCurrency(resultData.measuringCost);
+    const disposalCostVal = resultData.disposalCost || 0;
+    const disposalCost = formatCurrency(disposalCostVal);
+    const customPaintCostVal = resultData.specialFeatures?.customPaintCost || 0;
+    const customPaintCost = formatCurrency(customPaintCostVal);
+    const totalInstallCost = formatCurrency(resultData.installation?.totalInstall);
+
+    const costToInstaller = formatCurrency(resultData.costToInstaller);
+    const profitMargin = formatCurrency(resultData.profitMargin);
+    const totalDoors = resultData.part2?.totalDoors ?? globalTotalDoors;
+    const totalDrawers = resultData.part2?.numDrawers ?? globalTotalDrawers;
+    const hingeCount = resultData.hingeCount ?? 'N/A';
+
     let html = `
-      <div class="invoice" style="max-width:800px; margin:auto; border:1px solid #3CDBC0; padding:1em;">
-        <h1 style="text-align:center; font-size:2em; margin-bottom:0;">Official Estimate</h1>
-        <p style="text-align:center; font-size:0.9em;">Date: ${dateStr}</p>
-        <hr style="border-color:#3CDBC0;">
-        
-        <h2 style="font-size:1.4em; margin-bottom:0.5em;">Summary of Charges</h2>
-        <table style="width:100%; border-collapse:collapse;">
-          <tr>
-            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">ALL Section Cost</td>
-            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">$${allSectionsCost}</td>
-          </tr>
-          <tr>
-            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Hinge Drilling Cost</td>
-            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">$${(resultData.hingeCost || 0).toFixed(2)}</td>
-          </tr>
-          <tr>
-            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Refinishing Cost</td>
-            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">$${(resultData.refinishingCost || 0).toFixed(2)}</td>
-          </tr>
-          <tr>
-            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Measuring Cost</td>
-            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">$${(resultData.measuringCost || 0).toFixed(2)}</td>
-          </tr>
-          <tr>
-            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Disposal Cost</td>
-            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">$${(resultData.disposalCost || 0).toFixed(2)}</td>
-          </tr>
-          <tr>
-            <td style="padding:0.5em; font-weight:bold;">Overall Total</td>
-            <td style="padding:0.5em; text-align:right; font-weight:bold;">$${overall}</td>
-          </tr>
-        </table>
-        
-        <hr style="border-color:#3CDBC0;">
-        
-        <div id="installationDetails">
-          <h2 style="font-size:1.4em; margin-bottom:0.5em;">Installation Details</h2>
-          <table style="width:100%; border-collapse:collapse;">
-            <tr>
-              <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Total Doors</td>
-              <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">${globalTotalDoors}</td>
-            </tr>
-            <tr>
-              <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Total Drawers</td>
-              <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">${globalTotalDrawers}</td>
-            </tr>
-            <tr>
-              <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Hinge Count</td>
-              <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">${resultData.hingeCount}</td>
-            </tr>
-            <tr>
-              <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Cost To Installer</td>
-              <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">$${costToInstaller}</td>
-            </tr>
-            <tr>
-              <td style="padding:0.5em; font-weight:bold;">Profit Margin</td>
-              <td style="padding:0.5em; text-align:right; font-weight:bold;">$${profitMargin}</td>
-            </tr>
-          </table>
+      <div class="invoice">
+        <div class="invoice-header">
+          <h1>Fill Project Estimate</h1>
+          <p>Date: ${dateStr}</p>
         </div>
-        <br>
-        <button id="toggleInstallationBtn" style="margin-top:1em; padding:0.5em 1em;">Hide Installation Details</button>
+        <hr class="invoice-hr">
+        <h2>Summary of Charges</h2>
+        <table class="summary-table">
+          <tbody>
+            <tr><td class="table-label">Door & Drawer Fronts (All Sections)</td><td class="table-value">${allSectionsCost}</td></tr>
+            <tr><td class="table-label">Hinge Drilling</td><td class="table-value">${hingeCost}</td></tr>
+            ${customPaintCostVal > 0 ? `<tr><td class="table-label">Custom Paint</td><td class="table-value">${customPaintCost}</td></tr>` : ''}
+            <tr><td class="table-label">Refinishing (${globalTotalSqFt.toFixed(2)} sq ft)</td><td class="table-value">${refinishingCost}</td></tr>
+            <tr><td class="table-label">On-Site Measuring</td><td class="table-value">${measuringCost}</td></tr>
+            <tr><td class="table-label">Installation (Doors, Drawers, Lazy Susans)</td><td class="table-value">${totalInstallCost}</td></tr>
+            ${disposalCostVal > 0 ? `<tr><td class="table-label">Disposal</td><td class="table-value">${disposalCost}</td></tr>` : ''}
+          </tbody>
+          <tfoot>
+            <tr class="total-row"><td class="table-label">Estimated Project Total</td><td class="table-value">${overallTotal}</td></tr>
+          </tfoot>
+        </table>
+        <hr class="invoice-hr">
+        <button type="button" id="toggleDetailsBtn" class="toggle-details-btn">Show Internal Details</button>
+        <div id="internalDetails" class="details-section" style="display: none;">
+            <h3>Internal Cost Breakdown</h3>
+             <table class="details-table">
+                 <tr><td>Total Doors:</td><td>${totalDoors}</td></tr>
+                 <tr><td>Total Drawers:</td><td>${totalDrawers}</td></tr>
+                 <tr><td>Hinge Count:</td><td>${hingeCount}</td></tr>
+                 <tr><td>Installation - Doors:</td><td>${formatCurrency(resultData.installation?.doorInstall)}</td></tr>
+                 <tr><td>Installation - Drawers:</td><td>${formatCurrency(resultData.installation?.drawerInstall)}</td></tr>
+                 <tr><td>Installation - Lazy Susans:</td><td>${formatCurrency(resultData.installation?.lazySusanInstall)}</td></tr>
+                 <tr><td>Cost To Installer (Materials + Hinge Drilling):</td><td>${costToInstaller}</td></tr>
+                 <tr><td>Profit Margin:</td><td>${profitMargin}</td></tr>
+             </table>
+        </div>
+        <p class="estimate-footer">Thank you for choosing nuDoors! This estimate is valid for 30 days.</p>
       </div>
     `;
-    
-    document.getElementById('results').innerHTML = html;
-    
-    // Toggle Installation Details functionality.
-    document.getElementById('toggleInstallationBtn').addEventListener('click', () => {
-      const installDiv = document.getElementById('installationDetails');
-      const toggleBtn = document.getElementById('toggleInstallationBtn');
-      if (installDiv.style.display === 'none') {
-        installDiv.style.display = 'block';
-        toggleBtn.textContent = 'Hide Installation Details';
-      } else {
-        installDiv.style.display = 'none';
-        toggleBtn.textContent = 'Show Installation Details';
-      }
-    });
-    
-    // Attach print functionality.
-    document.getElementById('printEstimate').addEventListener('click', () => {
-      window.print();
-    });
+
+    resultsDiv.innerHTML = html;
+
+    const toggleBtn = document.getElementById('toggleDetailsBtn');
+    const detailsDiv = document.getElementById('internalDetails');
+    if (toggleBtn && detailsDiv) {
+        toggleBtn.addEventListener('click', () => {
+            const isHidden = detailsDiv.style.display === 'none';
+            detailsDiv.style.display = isHidden ? 'block' : 'none';
+            toggleBtn.textContent = isHidden ? 'Hide Internal Details' : 'Show Internal Details';
+        });
+    }
+    printBtnContainer.style.display = 'block';
   }
-});
+
+  // Attach print functionality
+   const printEstimateBtn = document.getElementById('printEstimate');
+   if (printEstimateBtn) {
+       printEstimateBtn.addEventListener('click', () => window.print());
+   }
+
+   // Conditional Printing Logic
+    window.onbeforeprint = () => {
+        const resultsDivActive = document.getElementById('results');
+        const internalDetailsDiv = resultsDivActive ? resultsDivActive.querySelector('#internalDetails') : null;
+        if (internalDetailsDiv && internalDetailsDiv.style.display !== 'none') {
+            internalDetailsDiv.classList.add('print-section');
+        } else if (internalDetailsDiv) {
+             internalDetailsDiv.classList.remove('print-section');
+        }
+    };
+
+    window.onafterprint = () => {
+        const resultsDivActive = document.getElementById('results');
+        const internalDetailsDiv = resultsDivActive ? resultsDivActive.querySelector('#internalDetails') : null;
+        if (internalDetailsDiv) {
+            internalDetailsDiv.classList.remove('print-section');
+        }
+    };
+
+}); // End DOMContentLoaded

@@ -2,23 +2,43 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>nuDoors Estimator</title>
   <style>
+    :root {
+        --primary-color: #3CDBC0; /* Teal */
+        --background-color: black;
+        --text-color: white;
+        --section-bg-color: #333;
+        --input-bg-color: #3CDBC0; /* Teal */
+        --input-text-color: black;
+        --border-color: #3CDBC0; /* Teal */
+        --instruction-bg: #222;
+        --footer-text: #ccc;
+        --remove-btn-bg: #dc3545; /* Red */
+        --error-text-color: #f8d7da; /* Light red for errors */
+        --error-bg-color: #721c24; /* Dark red background for errors */
+        --collapsed-width: 220px; /* Width when Price Setup is collapsed */
+    }
     body {
-      background-color: black;
-      color: white;
+      background-color: var(--background-color);
+      color: var(--text-color);
       font-family: Arial, sans-serif;
       margin: 2em;
+      line-height: 1.6;
     }
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 1em;
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 1em;
+      flex-wrap: wrap; /* Allow header items to wrap */
     }
     header h1 {
-      margin: 0;
-      color: #3CDBC0;
+      margin: 0 0 0.2em 0; /* Add bottom margin if wraps */
+      color: var(--primary-color);
       font-size: 2em;
     }
     header img {
@@ -26,191 +46,551 @@
     }
     /* Directions styling */
     #instructions {
-      background-color: #222;
-      padding: 1em;
-      border-radius: 2px;
-      margin-bottom: 1em;
+      background-color: var(--instruction-bg);
+      padding: 1.5em;
+      border-radius: 4px;
+      margin-bottom: 1.5em;
+      border: 1px solid var(--border-color);
     }
     #instructions strong {
       font-weight: bold;
+      color: var(--primary-color);
+      display: block;
+      margin-bottom: 0.5em;
+      font-size: 1.1em;
     }
     #instructions ol {
       margin-left: 1.5em;
+      padding-left: 0.5em; /* Adjust padding */
     }
+    #instructions li {
+       margin-bottom: 0.5em;
+    }
+     #instructions a {
+        color: cyan;
+        text-decoration: none;
+     }
+     #instructions a:hover {
+        text-decoration: underline;
+     }
+
     /* Centered example image */
     #exampleImage {
       text-align: center;
-      margin-bottom: 1em;
+      margin-bottom: 1.5em;
     }
     #exampleImage img {
       max-width: 90%;
       height: auto;
-      border: 2px solid #3CDBC0;
-      border-radius: 2px;
+      border: 2px solid var(--primary-color);
+      border-radius: 4px;
     }
+
+     /* New container for Price Setup and Other Parts */
+     #mainConfigRow {
+         display: flex;
+         flex-wrap: wrap; /* Allow wrapping on very small screens */
+         gap: 1.5em;
+         align-items: flex-start; /* Align tops */
+         margin-bottom: 1.5em;
+     }
+
     /* Price Setup Section (collapsible) */
     #priceSetupContainer {
-      background-color: #333;
-      border: 1px solid #3CDBC0;
-      padding: 1em;
-      border-radius: 2px;
-      width: 450px;
+      background-color: var(--section-bg-color);
+      border: 1px solid var(--border-color);
+      padding: 1.5em;
+      border-radius: 4px;
       box-sizing: border-box;
-      margin-bottom: 0.5em;
+      /* Define base width and allow shrinking */
+      flex: 0 1 450px; /* Flex: grow 0, shrink 1, basis 450px */
+      min-width: var(--collapsed-width); /* Minimum width when collapsed */
+      height: auto; /* Let content determine height */
+      overflow: hidden; /* Hide overflow during collapse */
+      transition: width 0.4s ease-in-out, padding 0.4s ease-in-out, min-width 0.4s ease-in-out;
     }
+     #priceSetupContainer h2 {
+         display: flex;
+         justify-content: space-between;
+         align-items: center;
+         flex-wrap: wrap; /* Allow title/button wrap */
+         margin-bottom: 1em; /* Space below header */
+     }
     #togglePriceSetupBtn {
-      margin-bottom: 0.5em;
       padding: 0.4em 0.8em;
-      background-color: #3CDBC0;
-      border: none;
-      border-radius: 2px;
-      cursor: pointer;
-      color: black;
+      font-size: 0.8em;
+      margin-left: 1em; /* Add space */
+      margin-top: 0.5em; /* Add top margin if wraps */
+      flex-shrink: 0; /* Prevent button from shrinking */
     }
     /* Price Setup inner content */
     #priceSetupContent {
-      display: block;
+      /* Transition opacity for smoother hide/show */
+      transition: opacity 0.2s linear 0.1s; /* Delay opacity transition slightly */
+      opacity: 1;
     }
+    .price-setup-columns {
+        display: flex;
+        gap: 1.5em;
+        flex-wrap: wrap; /* Allow columns to wrap */
+    }
+     .price-setup-columns > div {
+        flex: 1; /* Equal width columns when side-by-side */
+        min-width: 180px; /* Adjust min-width for inner columns */
+     }
+
+    /* Collapsed state for Price Setup */
+    #priceSetupContainer.collapsed {
+        flex-basis: var(--collapsed-width); /* Shrink basis */
+        width: var(--collapsed-width); /* Force width */
+        padding-left: 1em;
+        padding-right: 1em;
+        padding-bottom: 0; /* Reduce bottom padding */
+        min-width: var(--collapsed-width); /* Explicitly set min-width */
+    }
+    #priceSetupContainer.collapsed #priceSetupContent {
+        display: none; /* Hide content when collapsed */
+        opacity: 0;
+        transition: opacity 0.1s linear; /* Faster fade out */
+    }
+     #priceSetupContainer.collapsed h2 {
+        margin-bottom: 0.5em; /* Reduce space below header when collapsed */
+     }
+
+
+    /* Container for the other parts (Piece Count, etc.) */
+    #otherPartsContainer {
+        flex: 1 1 500px; /* Allow growing and shrinking, base size */
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5em;
+        min-width: 250px; /* Prevent it from getting too narrow */
+    }
+
+
     /* Form elements */
     h2 {
-      color: #3CDBC0;
-      font-size: 1.2em;
-      margin-bottom: 0.5em;
+      color: var(--primary-color);
+      font-size: 1.3em;
+      margin-bottom: 0.8em;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.3em;
     }
     label {
       display: block;
-      margin: 0.5em 0;
+      margin-bottom: 0.8em; /* More space between labels */
+       font-size: 0.95em;
     }
-    input, select, button {
-      background-color: #3CDBC0;
-      border: none;
-      padding: 0.7em;
-      margin: 0.85em 0;
-      border-radius: 2px;
-      color: black;
+    input[type="number"], select {
+      background-color: var(--input-bg-color);
+      border: 1px solid var(--border-color); /* Add subtle border */
+      padding: 0.8em;
+      border-radius: 3px;
+      color: var(--input-text-color);
+      width: 100%; /* Make inputs fill their container */
+      box-sizing: border-box; /* Include padding in width */
+      margin-top: 0.3em; /* Space between label and input */
+      font-size: 1em;
     }
-    button:hover, input:hover, select:hover {
-      opacity: 0.8;
+    /* Style number input arrows (optional, browser-specific) */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+       opacity: 0.3;
     }
-    .flex-row {
+
+    button {
+       background-color: var(--primary-color);
+       border: none;
+       padding: 0.8em 1.2em;
+       border-radius: 3px;
+       color: var(--input-text-color);
+       cursor: pointer;
+       font-weight: bold;
+       transition: background-color 0.2s ease, opacity 0.2s ease;
+       margin: 0; /* Reset margin for specific button styling */
+       font-size: 1em; /* Base font size */
+    }
+    button:hover {
+      opacity: 0.9;
+      background-color: #2CAAA0; /* Slightly darker teal on hover */
+    }
+     button.remove-button { /* Specific style for remove button */
+        background-color: var(--remove-btn-bg);
+        color: white;
+        padding: 0.4em 0.8em;
+        font-size: 0.8em;
+        margin-top: 0.5em;
+        margin-left: auto; /* Pushes button to the right */
+        display: block; /* Make it block to allow margin-left: auto */
+        width: fit-content; /* Shrink to content width */
+     }
+     button.remove-button:hover {
+        opacity: 0.8;
+        background-color: #c82333; /* Darker red */
+     }
+
+    .flex-row { /* General utility class, still used by sections container */
       display: flex;
       flex-wrap: wrap;
-      gap: 1em;
-      margin-bottom: 1em;
+      gap: 1.5em;
+      margin-bottom: 1.5em;
     }
-    .half-width {
-      width: 48%;
-      display: inline-block;
-    }
-    .part, .section {
-      background-color: #333;
-      border: 1px solid #3CDBC0;
-      padding: 1em;
-      border-radius: 2px;
-      width: 260px;
+
+    /* Sections and Parts layout */
+    .part { /* Base styles for parts in otherPartsContainer */
+      background-color: var(--section-bg-color);
+      border: 1px solid var(--border-color);
+      padding: 1.5em;
+      border-radius: 4px;
+      flex: 1; /* Allow flexing */
+      min-width: 220px; /* Base min-width for parts */
       box-sizing: border-box;
       position: relative;
+      display: flex;
+      flex-direction: column;
     }
+
+    .section { /* Specific styles for Rough Estimate Sections */
+      background-color: var(--section-bg-color);
+      border: 1px solid var(--border-color);
+      padding: 1.5em;
+      padding-top: 2em; /* Make space for Section ID */
+      border-radius: 4px;
+      flex: 1 1 calc(50% - 0.5em); /* Allow grow/shrink, aim for 2 cols */
+      min-width: 300px; /* Prevent sections becoming too narrow */
+      max-width: 25vw; /* Limit width to 1/4 viewport */
+      box-sizing: border-box;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+     .section > label,
+     .section > .dimension-inputs {
+        margin-bottom: 0.8em; /* Consistent spacing inside sections */
+     }
+     .section > .remove-button {
+        margin-top: auto; /* Push remove button to bottom */
+        align-self: flex-end; /* Align to the right */
+     }
+
     /* Section ID in top-right */
     .section-id {
       position: absolute;
-      top: 5px;
-      right: 5px;
+      top: 8px;
+      right: 12px;
       font-weight: bold;
-      color: #3CDBC0;
-    }
-    #roughEstimateContainer {
-      margin-bottom: 1em;
-    }
-    #sectionsContainer .section {
-      margin-bottom: 0.5em;
-    }
-    /* New Disposal Cost Part (quantities only) */
-    .part#disposalCost {
-      background-color: #333;
-      border: 1px solid #3CDBC0;
-      padding: 1em;
+      color: var(--primary-color);
+      font-size: 0.9em;
+      background-color: rgba(0,0,0,0.5); /* Semi-transparent background */
+      padding: 2px 5px;
       border-radius: 2px;
-      width: 260px;
-      box-sizing: border-box;
     }
-    /* Clear All Button styling */
-    #clearAllBtn {
-      background-color: #3CDBC0;
-      color: black;
-      padding: 0.5em 1em;
-      border-radius: 2px;
-      cursor: pointer;
-      margin-top: 1em;
-      font-weight: bold;
+    #roughEstimateContainer h2 {
+        margin-bottom: 1em; /* Add space below heading */
     }
-    /* Buttons */
-    #addSectionBtn, #calculateBtn {
-      background-color: #3CDBC0;
-      color: black;
-      padding: 0.5em 1em;
-      cursor: pointer;
-      border-radius: 2px;
-      margin-top: 0.5em;
-      font-weight: bold;
+    #sectionsContainer { /* This is the flex-row for the SECTIONS */
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1em; /* Gap between sections */
+      margin-bottom: 1em; /* Space below sections */
+    }
+     /* Ensure section content takes full width OF THE SECTION */
+     #sectionsContainer .section > * {
+        width: 100%;
+     }
+
+    /* Adjust width for the PARTS inside otherPartsContainer */
+     #otherPartsContainer .part {
+         flex-basis: calc(33.333% - 1em); /* Aim for 3 columns */
+     }
+
+    #addSectionBtn {
+       margin-top: 1em; /* Add space above button */
+       display: inline-block; /* Align properly */
+    }
+
+    /* Specific width for height/width inputs */
+     .dimension-inputs {
+        display: flex;
+        gap: 1em;
+     }
+      .dimension-inputs label {
+         flex: 1; /* Equal width */
+         margin-bottom: 0; /* Remove default label margin */
+      }
+
+    /* Buttons container */
+    #formActions { /* Wrap calculate/clear buttons for easier responsive control */
+        margin-top: 1.5em;
     }
     #calculateBtn {
-      padding: 0.65em 1.5em;
+      padding: 0.8em 2em; /* Larger padding */
       font-size: 1.1em;
-      margin-top: 1em;
+      margin-right: 1em; /* Space between buttons */
+      margin-bottom: 0.5em; /* Space if wraps */
     }
+    #clearAllBtn {
+      background-color: #6c757d; /* Grey */
+      color: white;
+      padding: 0.8em 1.5em;
+      font-size: 1.1em; /* Match calculate button */
+      margin-bottom: 0.5em; /* Space if wraps */
+    }
+     #clearAllBtn:hover {
+       background-color: #5a6268; /* Darker grey */
+     }
+
     /* Results display */
     #results {
-      margin-top: 1em;
-      background-color: #222;
-      color: #3CDBC0;
+      margin-top: 2em;
+      background-color: var(--instruction-bg); /* Consistent background */
+      color: var(--text-color); /* Use main text color */
       padding: 1em;
-      border-radius: 2px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      overflow-x: auto; /* Add scrollbars if invoice content overflows horizontally */
     }
-    .results-container {
-      display: flex;
-      justify-content: space-between;
-      gap: 2em;
-      flex-wrap: wrap;
+    /* Error message style */
+    .invoice-error {
+        padding: 1em;
+        background-color: var(--error-bg-color);
+        color: var(--error-text-color);
+        border: 1px solid var(--error-text-color);
+        border-radius: 4px;
+        margin: 1em;
     }
-    .results-left, .results-right {
-      flex: 1;
-      min-width: 300px;
+    .invoice-error p {
+        margin: 0.2em 0;
     }
-    .results-left h1, .results-left h2 {
-      margin: 0 0 0.5em 0;
+
+    /* Invoice Styles within #results */
+    .invoice {
+        max-width: 50%; /* <<< APPLIED CHANGE: Half width */
+        min-width: 300px;
+        margin: 1em auto; /* Center */
+        padding: 2em;
+        border: 1px solid var(--border-color);
+        background-color: var(--section-bg-color);
+        border-radius: 4px;
+        color: var(--text-color);
     }
-    .results-right p {
-      margin: 0.25em 0;
+    .invoice-header {
+        text-align: center;
+        margin-bottom: 1.5em;
+        padding-bottom: 1em;
+        border-bottom: 1px solid var(--border-color);
     }
-    button#toggleProfit, button#printEstimate {
-      padding: 0.5em 1em;
-      margin: 0.5em 0.5em 0 0;
-      border-radius: 2px;
-      cursor: pointer;
-      background-color: #3CDBC0;
-      border: none;
-      color: black;
+    .invoice-header img.invoice-logo {
+        height: 60px;
+        margin-bottom: 0.5em;
     }
+    .invoice-header h1 {
+        color: var(--primary-color);
+        margin-bottom: 0.2em;
+        font-size: 1.8em;
+    }
+     .invoice-header p {
+        font-size: 0.9em;
+        color: #ccc;
+     }
+    .invoice hr.invoice-hr {
+        border: none;
+        border-top: 1px dashed var(--border-color);
+        margin: 1.5em 0;
+    }
+     .invoice h2 {
+         font-size: 1.3em;
+         color: var(--primary-color);
+         margin-bottom: 1em;
+         border-bottom: none;
+     }
+     /* Table styling */
+     .summary-table, .details-table {
+         width: 100%;
+         border-collapse: collapse;
+         margin-bottom: 1em;
+     }
+      .summary-table td, .details-table td {
+          padding: 0.8em 0.5em;
+          border-bottom: 1px solid #444;
+          vertical-align: top;
+          word-break: break-word;
+      }
+       .summary-table .table-label, .details-table td:first-child {
+          text-align: left;
+          padding-right: 1em;
+          color: #ddd;
+       }
+        .summary-table .table-value, .details-table td:last-child {
+           text-align: right;
+           font-weight: bold;
+           color: var(--text-color);
+        }
+         .summary-table tfoot td {
+            border-bottom: none;
+            padding-top: 1em;
+         }
+         .summary-table .total-row td {
+             font-size: 1.2em;
+             font-weight: bold;
+             color: var(--primary-color);
+             border-top: 2px solid var(--border-color);
+             padding-top: 1em;
+         }
+
+     /* Details Section */
+     .details-section {
+         margin-top: 1.5em;
+         padding: 1em;
+         background-color: #2a2a2a;
+         border-radius: 4px;
+         border: 1px dashed #555;
+     }
+      .details-section h3 {
+         font-size: 1.1em;
+         color: var(--primary-color);
+         margin-bottom: 0.8em;
+      }
+      .details-table td {
+          padding: 0.5em;
+          font-size: 0.9em;
+      }
+      .toggle-details-btn {
+         margin: 1em 0 0.5em 0;
+         padding: 0.6em 1em;
+         font-size: 0.9em;
+         background-color: #555;
+         color: white;
+      }
+       .toggle-details-btn:hover {
+          background-color: #666;
+       }
+
+     .estimate-footer {
+         text-align: center;
+         margin-top: 2em;
+         font-size: 0.85em;
+         color: var(--footer-text);
+     }
+
+    /* Print Button Container */
+    #printButtonContainer {
+        margin-top: 1.5em;
+        text-align: center;
+        display: none;
+    }
+     #printEstimate {
+       padding: 0.8em 1.5em;
+       font-size: 1.1em;
+     }
+
+
+    /* Small text styling */
+    small {
+      display: block;
+      font-size: 0.85em;
+      color: #ccc;
+      margin-top: 0.4em;
+      margin-left: 0.2em;
+      line-height: 1.3;
+    }
+
+    /* ----------------------------------- */
+    /* --- RESPONSIVE STYLES FOR TABLETS --- */
+    /* ----------------------------------- */
+
+    /* Larger Tablets / Small Laptops (e.g., <= 1024px) */
+    @media (max-width: 1024px) {
+        body {
+            margin: 1.5em;
+        }
+        #mainConfigRow { gap: 1em; }
+        #priceSetupContainer { flex-basis: 350px; }
+        #otherPartsContainer { flex: 1 1 400px; }
+        #otherPartsContainer .part { flex-basis: calc(50% - 0.75em); min-width: 240px; }
+        .section { flex-basis: calc(50% - 0.5em); min-width: 280px; }
+        .invoice {
+            padding: 1.5em;
+            /* Still 50% max-width from main rule, adjust if needed */
+            /* max-width: 60%; */
+        }
+    }
+
+    /* Portrait Tablets and Smaller (e.g., <= 768px) */
+    @media (max-width: 768px) {
+        body { margin: 1em; font-size: 15px; }
+        header { padding-bottom: 0.8em; }
+        header h1 { font-size: 1.8em; }
+        header img { height: 45px; }
+        #instructions { padding: 1em; }
+        #mainConfigRow { flex-direction: column; align-items: stretch; gap: 1em; }
+        #priceSetupContainer { flex-basis: auto; width: 100%; }
+        #priceSetupContainer.collapsed { width: var(--collapsed-width); flex-basis: var(--collapsed-width); }
+        #otherPartsContainer { flex-basis: auto; width: 100%; }
+        #otherPartsContainer .part { flex-basis: calc(50% - 0.5em); min-width: 220px; }
+        .section { flex-basis: calc(50% - 0.5em); min-width: 260px; }
+        input[type="number"], select, button { padding: 0.9em; font-size: 1em; }
+        button { width: 100%; box-sizing: border-box; }
+        #addSectionBtn { width: auto; display: inline-block; }
+        #togglePriceSetupBtn { width: auto; }
+        button.remove-button { width: fit-content; padding: 0.5em 1em; align-self: flex-end; }
+        #formActions { display: flex; flex-direction: column; gap: 0.8em; margin-top: 1em; }
+        #calculateBtn, #clearAllBtn { margin-right: 0; width: 100%; }
+        .invoice {
+            padding: 1.5em;
+            max-width: 90%; /* <<< Allow wider on small tablets */
+        }
+         .invoice-header h1 { font-size: 1.6em; }
+         .invoice-header img.invoice-logo { height: 50px; }
+         .summary-table td, .details-table td { padding: 0.6em 0.3em; }
+         .summary-table .total-row td { font-size: 1.1em; }
+    }
+
+    /* Very Small Screens (e.g., Phones) */
+    @media (max-width: 600px) {
+         #sectionsContainer .section {
+             flex-basis: 100%;
+             max-width: none; /* Remove vw limit */
+             min-width: 0;
+             margin-bottom: 1em;
+         }
+          #otherPartsContainer .part {
+             flex-basis: 100%;
+             min-width: 0;
+             margin-bottom: 1em;
+          }
+          /* Optional: Adjust collapsed width on phones */
+          /* :root { --collapsed-width: 180px; } */
+          #priceSetupContainer.collapsed {
+              width: var(--collapsed-width);
+              flex-basis: var(--collapsed-width);
+          }
+         .invoice {
+             padding: 1em;
+             max-width: 95%; /* <<< Allow almost full width */
+         }
+    }
+
+
+    /* Print Styles */
 	@media print {
-	#instructions,
-	form,
-	#toggleProfit,
-	#printEstimate,
-	#priceSetupContainer,
-	#exampleImage,
-	header img { 
-		display: none !important;
-	}
-	#results {
-		margin-top: 0;
-	}
-	}
-	small {
-	display: block;
-	font-size: 0.85em;
-	color: #F2FCFB;
-	margin-top: 0.25em;
+        body { background-color: white; color: black; margin: 1em; font-size: 10pt; }
+        header, #instructions, #exampleImage, form, #printButtonContainer, .toggle-details-btn { display: none !important; }
+        #internalDetails:not(.print-section) { display: none !important; }
+        #internalDetails.print-section { display: block !important; background-color: #f8f8f8 !important; border: 1px solid #ccc !important; margin-top: 1.5em !important; padding: 1em !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        #internalDetails.print-section .details-table td { color: black !important; border-bottom: 1px solid #eee !important; }
+        #internalDetails.print-section h3 { color: black !important; }
+        #results { margin-top: 0; border: none; padding: 0; background-color: white; color: black; }
+        .invoice { border: 1px solid #ccc; box-shadow: none; padding: 1em; max-width: 100% !important; /* <<< Ensure full width for print */ background-color: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .invoice-header { border-bottom: 1px solid #ccc; }
+        .invoice-header img.invoice-logo { filter: grayscale(100%); opacity: 0.8; }
+        .invoice h1, .invoice h2 { color: black !important; }
+        .invoice hr.invoice-hr { border-top: 1px dashed #aaa; }
+        .summary-table td, .details-table td { border-bottom: 1px solid #eee; color: black !important; }
+        .summary-table .table-label, .details-table td:first-child { color: #333 !important; }
+        .summary-table .total-row td { color: black !important; border-top: 2px solid #aaa; }
+        .estimate-footer { color: #555 !important; }
 	}
 
   </style>
@@ -220,150 +600,156 @@
     <h1>nuDoors Estimator</h1>
     <img src="assets/logo.png" alt="Logo">
   </header>
-  
+
   <!-- Directions Section -->
   <div id="instructions">
     <strong>Directions:</strong>
     <ol>
-      <li>Measure the Height and Width of each section and enter these dimensions along with the Style and desired finish into "Measurements &amp; Styles".</li>
-      <li>In the "Hinge Count" section, enter the total number of doors of each size range to determine the number of hinges required.</li>
-      <li>In "Special Features", enter a 1 for each custom paint color desired.</li>
-      <li>In "Price Setup", input your pricing values for: Price per Door, Price per Drawer, Refinishing Cost per Sq Ft, Price per Lazy Susan, your On Site Measuring charge, and your Door Disposal Cost.</li>
-      <li>Then press "Calculate" to get your estimated price.</li>
-	  <li>Tip:Follow our playlists for everything from installation 
-	  guidance to our ordering guide at <a href="youtube.com/nudoors" style="color: cyan;">The nuDoors Official Channel</a></li>
+      <li>Measure the Height and Width of each section and enter these dimensions along with the Style and desired finish into "Section Calculator | By Square Foot". Use the "+ Add Section" button for multiple areas.</li>
+      <li>In "Piece Count", enter the total number of Drawers, Doors (by size), and Lazy Susans for the entire project.</li>
+      <li>In "Special Features", enter a 1 for each custom paint color desired (adds a flat fee).</li>
+      <li>In "Disposal Quantities", enter the quantity of old Doors and Lazy Susans to be removed.</li>
+      <li>Review and adjust the default costs in "Piece & Install Pricing" if needed (your settings are saved locally). Use the button to hide/show this section (it collapses horizontally).</li>
+      <li>Press "Calculate Estimate" to generate the estimate below.</li>
+      <li>The results section includes a button to show/hide "Internal Details" (like profit margin). If this section is visible when you print, it will be included in the printout.</li>
+	  <li>Tip: Follow our playlists for everything from installation
+	  guidance to our ordering guide at <a href="https://youtube.com/nudoors" target="_blank" rel="noopener noreferrer" style="color: cyan;">The nuDoors Official Channel</a></li>
     </ol>
   </div>
-  
+
   <!-- Centered Example Image -->
   <div id="exampleImage">
     <img src="assets/example-breakdown.png" alt="Example Breakdown">
   </div>
-  
+
   <form id="calcForm">
     <!-- Part 1: Rough Estimate (Dynamic Sections) -->
     <div id="roughEstimateContainer">
-      <h2>Section Calculator | By Square Foot
-      <div class="flex-row" id="sectionsContainer">
+      <h2>Section Calculator | By Square Foot</h2>
+      <div id="sectionsContainer" class="flex-row"> <!-- Added flex-row class -->
         <!-- Dynamic sections will be appended here -->
       </div>
       <button type="button" id="addSectionBtn">+ Add Section</button>
     </div>
-    
-    <!-- Price Setup Section (collapsible) -->
-    <div id="priceSetupContainer">
-      <h2>
-        Piece & Install Pricing 
-        <button type="button" id="togglePriceSetupBtn">Hide Price Setup</button>
-      </h2>
-      <div id="priceSetupContent">
-        <!-- Left Column of Price Setup -->
-        <div style="display: flex; gap: 1em;">
-          <div style="flex: 1;">
-            <label>
-              Price per Door:
-              <input type="number" name="pricePerDoor" value="10" step="0.1" required />
-            </label>
-            <small>Suggested MSRP: $10</small>
-            <label>
-              Price per Drawer:
-              <input type="number" name="pricePerDrawer" value="10" step="0.1" required />
-            </label>
-            <small>Suggested MSRP: $10</small>
-            <label>
-              Refinishing Cost per Sq Ft:
-              <input type="number" name="refinishingCostPerSqFt" value="40" step="0.1" required />
-            </label>
-            <small>Suggested MSRP: $40</small>
-          </div>
-          <!-- Right Column of Price Setup -->
-          <div style="flex: 1;">
-            <label>
-              Price per Lazy Susan:
-              <input type="number" name="pricePerLazySusan" value="20" step="0.1" required />
-            </label>
-            <small>Suggested MSRP: $20</small>
-            <label>
-              On Site Measuring:
-              <input type="number" name="onSiteMeasuring" value="200" step="0.1" required />
-            </label>
-            <small>Minimum Suggested MSRP: $200</small>
-            <label>
-              Door Disposal Cost:
-              <input type="number" name="doorDisposalCost" value="5" step="0.1" required />
-            </label>
-            <small>Suggested Disposal Cost: $5 per door</small>
+
+    <!-- NEW WRAPPER for Price Setup and Other Parts -->
+    <div id="mainConfigRow">
+
+        <!-- Price Setup Section (Now first in this row) -->
+        <div id="priceSetupContainer">
+          <h2>
+            <span>Piece & Install Pricing</span> <!-- Wrapped title in span -->
+            <button type="button" id="togglePriceSetupBtn">Hide Prices</button>
+          </h2>
+          <div id="priceSetupContent">
+            <div class="price-setup-columns">
+              <div>
+                <label>
+                  Door Install Price:
+                  <input type="number" name="pricePerDoor" value="10" step="0.1" required />
+                </label>
+                <small>Suggested MSRP: $10 / door</small>
+                <label>
+                  Drawer Install Price:
+                  <input type="number" name="pricePerDrawer" value="10" step="0.1" required />
+                </label>
+                <small>Suggested MSRP: $10 / drawer</small>
+                <label>
+                  Refinishing Cost per Sq Ft:
+                  <input type="number" name="refinishingCostPerSqFt" value="40" step="0.1" required />
+                </label>
+                <small>Suggested MSRP: $40 / sq ft</small>
+              </div>
+              <div>
+                <label>
+                  Lazy Susan Install Price:
+                  <input type="number" name="pricePerLazySusan" value="20" step="0.1" required />
+                </label>
+                <small>Suggested MSRP: $20 / Lazy Susan</small>
+                <label>
+                  On Site Measuring Fee:
+                  <input type="number" name="onSiteMeasuring" value="200" step="0.1" required />
+                </label>
+                <small>Minimum Suggested MSRP: $200</small>
+                <label>
+                  Disposal Cost per Door:
+                  <input type="number" name="doorDisposalCost" value="5" step="0.1" required />
+                </label>
+                <small>Suggested: $5 / door (Lazy Susan counts as 2)</small>
+              </div>
+            </div>
           </div>
         </div>
-        <br>
-      </div>
+
+        <!-- Other Parts Container (Now second in this row) -->
+        <div id="otherPartsContainer">
+          <div class="part" id="hingeDrilling">
+            <h2>Piece Count</h2>
+            <label>
+              Number of Drawers:
+              <input type="number" name="numDrawers" value="0" min="0" />
+            </label>
+            <label>
+              Doors 0" - 36" (Height):
+              <input type="number" name="doors_0_36" value="0" min="0" />
+            </label>
+            <label>
+              Doors 36.01" - 60" (Height):
+              <input type="number" name="doors_36_60" value="0" min="0" />
+            </label>
+            <label>
+              Doors 60.01" - 82" (Height):
+              <input type="number" name="doors_60_82" value="0" min="0" />
+            </label>
+            <label>
+              Number of Lazy Susans:
+              <input type="number" name="lazySusanQty" value="0" min="0" />
+            </label>
+          </div>
+
+          <div class="part" id="specialFeatures">
+            <h2>Special Features</h2>
+            <label>
+              Custom Paint Choices (Quantity):
+              <input type="number" name="customPaintQty" value="0" min="0" />
+            </label>
+            <small>Adds $200 per custom color to the total charge.</small>
+          </div>
+
+          <div class="part" id="disposalCost">
+            <h2>Disposal Quantities</h2>
+            <label>
+              Number of Doors for Disposal:
+              <input type="number" name="doorDisposalQty" value="0" min="0" />
+            </label>
+            <label>
+              Number of Lazy Susans for Disposal:
+              <input type="number" name="lazySusanDisposalQty" value="0" min="0" />
+            </label>
+             <small>Enter quantities to calculate disposal cost using rate from Price Setup.</small>
+          </div>
+        </div> <!-- End otherPartsContainer -->
+
+    </div> <!-- End mainConfigRow -->
+
+
+    <!-- Calculate and Clear All Buttons (Wrapped in a div) -->
+    <div id="formActions">
+        <button type="submit" id="calculateBtn">Calculate Estimate</button>
+        <button type="button" id="clearAllBtn">Clear All Fields</button>
     </div>
-    
-    <!-- Other Parts arranged in a horizontal flex row -->
-    <div class="flex-row" id="otherPartsContainer">
-      <!-- Rename "Hinge Drilling Calculations" to "Piece Count" and include Lazy Susan field -->
-      <div class="part" id="hingeDrilling">
-        <h2>Piece Count</h2>
-        <label>
-          Number of Drawers:
-          <input type="number" name="numDrawers" value="0" min="0" />
-        </label>
-        <label>
-          Doors 0"-36":
-          <input type="number" name="doors_0_36" value="0" min="0" />
-        </label>
-        <label>
-          Doors 36.01"-60":
-          <input type="number" name="doors_36_60" value="0" min="0" />
-        </label>
-        <label>
-          Doors 60.01"-82":
-          <input type="number" name="doors_60_82" value="0" min="0" />
-        </label>
-        <!-- New field for Lazy Susans in Piece Count -->
-        <label>
-          Number of Lazy Susans:
-          <input type="number" name="lazySusanQty" value="0" min="0" />
-        </label>
-      </div>
-      
-      <!-- Special Features -->
-      <div class="part" id="specialFeatures">
-        <h2>Special Features</h2>
-        <label>
-          Custom Paint Choice Quantity:
-          <input type="number" name="customPaintQty" value="0" min="0" />
-        </label>
-        <small>for a custom paint color $200 will be added to the charge</small>
-      </div>
-      
-      <!-- Disposal Cost Part (for quantities) -->
-      <div class="part" id="disposalCost">
-        <h2>Disposal Cost</h2>
-        <label>
-          Door Disposal Quantity:
-          <input type="number" name="doorDisposalQty" value="0" min="0" />
-        </label>
-        <label>
-          Lazy Susan Disposal Quantity:
-          <input type="number" name="lazySusanDisposalQty" value="0" min="0" />
-        </label>
-      </div>
-    </div>
-    
-    <!-- Calculate and Clear All Buttons -->
-    <button type="submit" id="calculateBtn">Calculate</button>
-    <button type="button" id="clearAllBtn">Clear All Fields</button>
   </form>
-  
+
   <!-- Results Section -->
-  <div id="results"></div>
-  
-  <!-- Toggle and Print Buttons (outside the form) -->
-  <div style="margin-top: 1em;">
-    <button id="printEstimate" style="padding:0.5em .5em;">Print Estimate</button>
+  <div id="results">
+      <!-- Estimate will be displayed here -->
   </div>
-  
+
+  <!-- Print Button Container (initially hidden) -->
+  <div id="printButtonContainer">
+      <button type="button" id="printEstimate">Print Estimate</button>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
