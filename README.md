@@ -54,3 +54,35 @@ A web-based cost estimation tool designed specifically for nuDoors projects, foc
     `http://localhost:3000` (Or the port specified if different)
 
 ## File Structure Overview
+
+├── server.js # Main Express server, API endpoint (/calculate)
+├── calculation.js # Core pricing logic module
+├── pricingData.json # Base pricing (per style/finish, hinges, etc.) - CRITICAL
+├── vercel.json # Vercel deployment configuration
+├── public/ # Static frontend assets
+│ ├── index.html # Main application HTML structure and CSS
+│ ├── script.js # Frontend JavaScript (UI logic, API calls)
+│ └── assets/ # Images (logo, example breakdown)
+│ ├── logo.png
+│ └── example-breakdown.png
+├── package.json # Project metadata and dependencies
+├── package-lock.json # Dependency lock file
+├── .gitignore # Files/folders ignored by Git (e.g., node_modules)
+└── README.md # This file
+## Deployment
+
+This application is configured for easy deployment using [Vercel](https://vercel.com/).
+
+1.  Connect your GitHub repository to Vercel.
+2.  Vercel will use the `vercel.json` file to build and deploy the application.
+3.  Configure custom domains within the Vercel project settings.
+
+## Contributing
+
+(Optional: Add contribution guidelines if applicable)
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+## License
+
+(Optional: Add a license if applicable, e.g., MIT)
+[MIT](https://choosealicense.com/licenses/mit/)
