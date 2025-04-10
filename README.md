@@ -55,7 +55,7 @@ A web-based cost estimation tool designed specifically for nuDoors projects, foc
 
 ## File Structure Overview
 
-├── server.js # Main Express server, API endpoint (/calculate)
+```├── server.js # Main Express server, API endpoint (/calculate)
 ├── calculation.js # Core pricing logic module
 ├── pricingData.json # Base pricing (per style/finish, hinges, etc.) - CRITICAL
 ├── vercel.json # Vercel deployment configuration
@@ -69,8 +69,8 @@ A web-based cost estimation tool designed specifically for nuDoors projects, foc
 ├── package-lock.json # Dependency lock file
 ├── .gitignore # Files/folders ignored by Git (e.g., node_modules)
 └── README.md # This file
-## Deployment
-
+## Deployment 
+```
 This application is configured for easy deployment using [Vercel](https://vercel.com/).
 
 1.  Connect your GitHub repository to Vercel.
