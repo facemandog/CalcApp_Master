@@ -192,20 +192,27 @@
       border: none;
       color: black;
     }
-    @media print {
-      #instructions, form, #toggleProfit, #printEstimate, #priceSetupContainer {
-        display: none !important;
-      }
-      #results {
-        margin-top: 0;
-      }
-    }
-    small {
-      display: block;
-      font-size: 0.85em;
-      color: #F2FCFB;
-      margin-top: 0.25em;
-    }
+	@media print {
+	#instructions,
+	form,
+	#toggleProfit,
+	#printEstimate,
+	#priceSetupContainer,
+	#exampleImage,
+	header img { 
+		display: none !important;
+	}
+	#results {
+		margin-top: 0;
+	}
+	}
+	small {
+	display: block;
+	font-size: 0.85em;
+	color: #F2FCFB;
+	margin-top: 0.25em;
+	}
+
   </style>
 </head>
 <body>
@@ -223,6 +230,8 @@
       <li>In "Special Features", enter a 1 for each custom paint color desired.</li>
       <li>In "Price Setup", input your pricing values for: Price per Door, Price per Drawer, Refinishing Cost per Sq Ft, Price per Lazy Susan, your On Site Measuring charge, and your Door Disposal Cost.</li>
       <li>Then press "Calculate" to get your estimated price.</li>
+	  <li>Tip:Follow our playlists for everything from installation 
+	  guidance to our ordering guide at <a href="youtube.com/nudoors" style="color: cyan;">The nuDoors Official Channel</a></li>
     </ol>
   </div>
   
@@ -234,7 +243,7 @@
   <form id="calcForm">
     <!-- Part 1: Rough Estimate (Dynamic Sections) -->
     <div id="roughEstimateContainer">
-      <h2>Rough Estimate</h2>
+      <h2>Section Calculator | By Square Foot
       <div class="flex-row" id="sectionsContainer">
         <!-- Dynamic sections will be appended here -->
       </div>

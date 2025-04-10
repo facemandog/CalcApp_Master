@@ -344,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Updated displayResults function with invoice-style layout.
+  // Updated displayResults function with an invoice-style layout and a toggle button for Installation Details.
   function displayResults(resultData) {
     if (resultData.error) {
       document.getElementById('results').innerHTML = `<h2>Error:</h2><p>${resultData.error}</p>`;
@@ -406,34 +406,50 @@ document.addEventListener('DOMContentLoaded', () => {
         
         <hr style="border-color:#3CDBC0;">
         
-        <h2 style="font-size:1.4em; margin-bottom:0.5em;">Installation Details</h2>
-        <table style="width:100%; border-collapse:collapse;">
-          <tr>
-            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Total Doors</td>
-            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">${globalTotalDoors}</td>
-          </tr>
-          <tr>
-            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Total Drawers</td>
-            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">${globalTotalDrawers}</td>
-          </tr>
-          <tr>
-            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Hinge Count</td>
-            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">${resultData.hingeCount}</td>
-          </tr>
-          <tr>
-            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Cost To Installer</td>
-            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">$${costToInstaller}</td>
-          </tr>
-          <tr>
-            <td style="padding:0.5em; font-weight:bold;">Profit Margin</td>
-            <td style="padding:0.5em; text-align:right; font-weight:bold;">$${profitMargin}</td>
-          </tr>
-        </table>
+        <div id="installationDetails">
+          <h2 style="font-size:1.4em; margin-bottom:0.5em;">Installation Details</h2>
+          <table style="width:100%; border-collapse:collapse;">
+            <tr>
+              <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Total Doors</td>
+              <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">${globalTotalDoors}</td>
+            </tr>
+            <tr>
+              <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Total Drawers</td>
+              <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">${globalTotalDrawers}</td>
+            </tr>
+            <tr>
+              <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Hinge Count</td>
+              <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">${resultData.hingeCount}</td>
+            </tr>
+            <tr>
+              <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Cost To Installer</td>
+              <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">$${costToInstaller}</td>
+            </tr>
+            <tr>
+              <td style="padding:0.5em; font-weight:bold;">Profit Margin</td>
+              <td style="padding:0.5em; text-align:right; font-weight:bold;">$${profitMargin}</td>
+            </tr>
+          </table>
+        </div>
+        <br>
+        <button id="toggleInstallationBtn" style="margin-top:1em; padding:0.5em 1em;">Hide Installation Details</button>
       </div>
     `;
     
-    // Set the final invoice-styled HTML to the results container.
     document.getElementById('results').innerHTML = html;
+    
+    // Toggle Installation Details functionality.
+    document.getElementById('toggleInstallationBtn').addEventListener('click', () => {
+      const installDiv = document.getElementById('installationDetails');
+      const toggleBtn = document.getElementById('toggleInstallationBtn');
+      if (installDiv.style.display === 'none') {
+        installDiv.style.display = 'block';
+        toggleBtn.textContent = 'Hide Installation Details';
+      } else {
+        installDiv.style.display = 'none';
+        toggleBtn.textContent = 'Show Installation Details';
+      }
+    });
     
     // Attach print functionality.
     document.getElementById('printEstimate').addEventListener('click', () => {
