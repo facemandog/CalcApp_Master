@@ -1,209 +1,202 @@
 // calculation.js
 
-/**
- * Calculate the area (in square feet) from height and width (in inches).
- * @param {number} height - Height in inches.
- * @param {number} width - Width in inches.
- * @returns {number} Area in square feet.
- */
+/** Calculate Area (sq ft) from inches. */
 function calculateArea(height, width) {
-  return (height * width) / 144;
+  return (Number(height || 0) * Number(width || 0)) / 144;
 }
 
-/**
- * Retrieves the price per square foot for a door/drawer given its style and finish.
- * @param {Object} pricingData - The pricing JSON (contains doorPricing).
- * @param {string} style - E.g., "Shaker" or a drawer style.
- * @param {string} finish - E.g., "Painted".
- * @returns {number} The price per square foot.
- */
+/** Get price per sq ft for door/drawer style/finish. */
 function getPriceForDoor(pricingData, style, finish) {
+  if (!pricingData || !pricingData.doorPricing) return 0;
   if (
-    pricingData.doorPricing &&
     pricingData.doorPricing[style] &&
     pricingData.doorPricing[style][finish]
   ) {
-    return pricingData.doorPricing[style][finish];
+    return Number(pricingData.doorPricing[style][finish]) || 0;
   }
   return 0;
 }
 
-/**
- * Computes the costs for a Rough Estimate section.
- * It calculates the area, then computes both the door cost (using doorStyle)
- * and the drawer cost (using drawerStyle). If the drawer style equals the door style,
- * the drawer cost is set to 0.
- * @param {Object} section - An object with properties: doorStyle, drawerStyle, finish, height, and width.
- * @param {Object} pricingData - Contains doorPricing.
- * @returns {Object} Returns the area, doorCost, drawerCost, and totalSectionCost.
- */
+/** Calculate cost for one Rough Estimate section. */
 function calculateSectionCost(section, pricingData) {
   const area = calculateArea(section.height, section.width);
   const doorPrice = getPriceForDoor(pricingData, section.doorStyle, section.finish);
   const drawerPrice = getPriceForDoor(pricingData, section.drawerStyle, section.finish);
-  const doorCost = area * doorPrice;
-  const drawerCost = (section.doorStyle === section.drawerStyle) ? 0 : (area * drawerPrice);
-  return { area, doorCost, drawerCost, totalSectionCost: doorCost + drawerCost };
-}
+  const doorCost = Number(area * doorPrice) || 0;
+  const drawerCost = (section.doorStyle === section.drawerStyle || drawerPrice === 0) ? 0 : (Number(area * drawerPrice) || 0);
 
-/**
- * Computes the hinge drilling cost using Part 2 information.
- * @param {Object} part2 - Contains doors_0_36, doors_36_60, doors_60_82.
- * @param {Object} hingeCosts - From pricingData.hingeCosts.
- * @returns {number} Total hinge cost.
- */
-function calculateHingeCost(part2, hingeCosts) {
-  return (
-    (part2.doors_0_36 * (hingeCosts["0-36"] || 0)) +
-    (part2.doors_36_60 * (hingeCosts["36.01-60"] || 0)) +
-    (part2.doors_60_82 * (hingeCosts["60.01-82"] || 0))
-  );
-}
-
-/**
- * Computes the total cost for special features.
- * Since Lazy Susan Quantity has now been moved to installation calculations,
- * we only consider custom paint choices here.
- * @param {Object} part3 - Contains customPaintQty.
- * @param {Object} pricingData - Contains customPaint pricing.
- * @returns {Object} Contains customPaintCost.
- */
-function calculateSpecialFeaturesCost(part3, pricingData) {
-  const customPaintCost = part3.customPaintQty * (pricingData.customPaint.price || 0);
-  return { customPaintCost };
-}
-
-/**
- * Calculates the refinishing cost.
- * @param {number} totalSqFt - Total square footage.
- * @param {number} refinishingCostPerSqFt - The refinishing cost per sq ft from Price Setup.
- * @returns {number} The calculated refinishing cost.
- */
-function calculateRefinishingCost(totalSqFt, refinishingCostPerSqFt) {
-  return totalSqFt * refinishingCostPerSqFt;
-}
-
-/**
- * Calculates the disposal cost.
- * @param {Object} disposal - Contains doorDisposalQty and lazySusanDisposalQty.
- * @param {number} doorDisposalCost - The cost per door for disposal (from Price Setup).
- * @returns {number} The calculated total disposal cost.
- */
-function calculateDisposalCost(disposal, doorDisposalCost) {
-  const doorDisposalQty = disposal && disposal.doorDisposalQty ? parseInt(disposal.doorDisposalQty) || 0 : 0;
-  const lazySusanDisposalQty = disposal && disposal.lazySusanDisposalQty ? parseInt(disposal.lazySusanDisposalQty) || 0 : 0;
-  return (doorDisposalQty + (lazySusanDisposalQty * 2)) * doorDisposalCost;
-}
-
-/**
- * Computes the installation costs using values from Price Setup.
- * Now includes installation cost for lazySusans.
- * @param {Object} priceSetup - Contains pricePerDoor, pricePerDrawer, pricePerLazySusan.
- * @param {Object} part2 - Contains totalDoors, numDrawers, and lazySusanQty.
- * @returns {Object} Contains doorInstall, drawerInstall, lazySusanInstall, and totalInstall.
- */
-function calculateInstallationCost(priceSetup, part2) {
-  const totalDoors = part2.totalDoors;
-  const totalDrawers = parseInt(part2.numDrawers) || 0;
-  const lazySusanQty = parseInt(part2.lazySusanQty) || 0;
-  const doorInstall = totalDoors * priceSetup.pricePerDoor;
-  const drawerInstall = totalDrawers * priceSetup.pricePerDrawer;
-  const lazySusanInstall = lazySusanQty * priceSetup.pricePerLazySusan;
   return {
-    doorInstall,
-    drawerInstall,
-    lazySusanInstall,
-    totalInstall: doorInstall + drawerInstall + lazySusanInstall
-  };
+      area: Number(area.toFixed(4)),
+      doorCost: Number(doorCost.toFixed(2)),
+      drawerCost: Number(drawerCost.toFixed(2)),
+      totalSectionCost: Number((doorCost + drawerCost).toFixed(2)),
+      doorStyle: section.doorStyle,
+      drawerStyle: section.drawerStyle,
+      finish: section.finish,
+      height: section.height,
+      width: section.width
+    };
+}
+
+/** Calculate hinge drilling cost. */
+function calculateHingeCost(part2, hingeCosts) {
+    if (!part2 || !hingeCosts) return 0;
+    const d0_36 = Number(part2.doors_0_36 || 0);
+    const d36_60 = Number(part2.doors_36_60 || 0);
+    const d60_82 = Number(part2.doors_60_82 || 0);
+    const c0_36 = Number(hingeCosts["0-36"] || 0);
+    const c36_60 = Number(hingeCosts["36.01-60"] || 0);
+    const c60_82 = Number(hingeCosts["60.01-82"] || 0);
+    return (d0_36 * c0_36) + (d36_60 * c36_60) + (d60_82 * c60_82);
+}
+
+/** Calculate special features cost (custom paint). */
+function calculateSpecialFeaturesCost(part3, pricingData) {
+    if (!part3 || !pricingData || !pricingData.customPaint) return { customPaintCost: 0 };
+    const qty = Number(part3.customPaintQty || 0);
+    const price = Number(pricingData.customPaint.price || 0);
+    return { customPaintCost: qty * price };
+}
+
+/** Calculate refinishing cost. */
+function calculateRefinishingCost(totalSqFt, refinishingCostPerSqFt) {
+  const sqFt = Number(totalSqFt) || 0;
+  const costPerSqFt = Number(refinishingCostPerSqFt) || 0;
+  return sqFt * costPerSqFt;
+}
+
+/** Calculate installation cost. */
+function calculateInstallationCost(priceSetup, part2) {
+    if (!priceSetup || !part2) return { doorInstall: 0, drawerInstall: 0, lazySusanInstall: 0, totalInstall: 0 };
+    const totalDoors = Number(part2.totalDoors || 0); // Actual doors from input
+    const totalDrawers = parseInt(part2.numDrawers) || 0;
+    const lazySusanQty = parseInt(part2.lazySusanQty) || 0;
+    const pricePerDoor = Number(priceSetup.pricePerDoor) || 0;
+    const pricePerDrawer = Number(priceSetup.pricePerDrawer) || 0;
+    const pricePerLazySusan = Number(priceSetup.pricePerLazySusan) || 0;
+    const doorInstall = totalDoors * pricePerDoor;
+    const drawerInstall = totalDrawers * pricePerDrawer;
+    const lazySusanInstall = lazySusanQty * pricePerLazySusan;
+    return {
+      doorInstall,
+      drawerInstall,
+      lazySusanInstall,
+      totalInstall: doorInstall + drawerInstall + lazySusanInstall
+    };
 }
 
 /**
- * Main calculation function that computes the overall total along with new fields:
- * - Total ALL Section Cost: Sum of all Rough Estimate section total costs.
- * - Cost To Installer: (Total ALL Section Cost) + (Hinge Drilling Cost).
- * - Profit Margin: Overall Total - Cost To Installer.
- * - Hinge Count: Calculated as:
- *      (Doors 0"-36" * 2) + (Doors 36.01"-60" * 3) + (Doors 60.01"-82" * 4)
- * - Disposal Cost: Calculated from disposal inputs.
- * Overall Total now includes the Disposal Cost.
- * Uses the new payload structure with a "priceSetup" object.
- * @param {Object} payload - The JSON payload sent from the client.
- *        Expected additional properties:
- *          payload.disposal with fields doorDisposalQty and lazySusanDisposalQty.
- * @param {Object} pricingData - Contains doorPricing, hingeCosts, and customPaint pricing.
- * @returns {Object} A breakdown of the final result.
+ * Main calculation function.
+ * Adds Lazy Susan Surcharge to overall total.
+ * @param {Object} payload - Client payload.
+ * @param {Object} pricingData - Pricing JSON.
+ * @returns {Object} Breakdown of results.
  */
 function calculateOverallTotal(payload, pricingData) {
-  // Calculate section costs for each Rough Estimate section.
+  // Basic validation
+  if (!payload || !payload.sections || !payload.part2 || !payload.part3 || !payload.priceSetup) {
+      throw new Error("Invalid payload structure received.");
+  }
+  if (!pricingData || !pricingData.hingeCosts || !pricingData.customPaint || !pricingData.doorPricing) {
+       throw new Error("Invalid pricingData structure.");
+  }
+
+  // Calculate section costs
   let totalAllSectionCost = 0;
   const sectionBreakdown = [];
   payload.sections.forEach(section => {
-    const result = calculateSectionCost(section, pricingData);
-    sectionBreakdown.push({
-      area: result.area,
-      doorCost: result.doorCost,
-      drawerCost: result.drawerCost,
-      totalSectionCost: result.totalSectionCost
-    });
-    totalAllSectionCost += result.totalSectionCost;
+    if(section && typeof section === 'object'){
+        const result = calculateSectionCost(section, pricingData);
+        sectionBreakdown.push(result);
+        totalAllSectionCost += result.totalSectionCost || 0;
+    } else { console.warn("Skipping invalid section in payload:", section); }
   });
-  
-  // Compute hinge drilling cost.
+
+  // Hinge cost
   const hingeCost = calculateHingeCost(payload.part2, pricingData.hingeCosts);
-  
-  // Compute special features cost (custom paint only).
+
+  // Special features cost
   const specialFeatures = calculateSpecialFeaturesCost(payload.part3, pricingData);
-  
-  // Get total square footage.
-  const totalSqFt = payload.priceSetup.onSiteMeasuringSqFt || payload.part5.totalSqFt || 0;
-  
-  // Compute refinishing cost from Price Setup.
+
+  // Total Square Footage
+  const totalSqFt = Number(payload.priceSetup.onSiteMeasuringSqFt || 0);
+
+  // Refinishing cost
   const refinishingCost = calculateRefinishingCost(totalSqFt, payload.priceSetup.refinishingCostPerSqFt);
-  
-  // On site measuring cost now comes from Price Setup.
-  const measuringCost = payload.priceSetup.onSiteMeasuring || 0;
-  
-  // Compute installation cost using Price Setup values.
+
+  // Measuring cost
+  const measuringCost = Number(payload.priceSetup.onSiteMeasuring || 0);
+
+  // Installation cost (based on actual inputs)
   const installation = calculateInstallationCost(payload.priceSetup, payload.part2);
-  
-  // Compute Disposal Cost using the new doorDisposalCost from Price Setup.
-  const disposalCost = payload.disposal ? calculateDisposalCost(payload.disposal, payload.priceSetup.doorDisposalCost) : 0;
-  
-  // New field: Cost To Installer = Total ALL Section Cost + Hinge Drilling Cost.
-  const costToInstaller = totalAllSectionCost + hingeCost;
-  
-  // Overall Total includes all components plus disposal cost.
+
+  // Conditional Disposal Cost Calculation
+  let disposalCost = 0;
+  let doorsForDisposal = 0;
+  let lazySusansForDisposal = 0;
+  if (payload.priceSetup.calculateDisposal === 'yes') {
+    doorsForDisposal = Number(payload.part2.totalDoors || 0); // Actual doors
+    lazySusansForDisposal = Number(payload.part2.lazySusanQty || 0);
+    const doorDisposalRate = Number(payload.priceSetup.doorDisposalCost || 0);
+    const totalDisposalUnits = doorsForDisposal + (lazySusansForDisposal * 2); // LS counts as 2 here
+    disposalCost = totalDisposalUnits * doorDisposalRate;
+  }
+
+  // --- NEW: Calculate Lazy Susan Surcharge ---
+  const lazySusanQty = Number(payload.part2.lazySusanQty || 0);
+  const lazySusanSurchargePerUnit = 50; // $50 surcharge per unit
+  const lazySusanSurchargeTotal = lazySusanQty * lazySusanSurchargePerUnit;
+  // --- END: Surcharge Calculation ---
+
+  // Cost to Installer
+  const costToInstaller = Number(totalAllSectionCost) + Number(hingeCost);
+
+  // Overall Total - Add the surcharge here
   const overallTotal =
-    totalAllSectionCost +
-    hingeCost +
-    specialFeatures.customPaintCost +
-    refinishingCost +
-    measuringCost +
-    installation.totalInstall +
-    disposalCost;
-  
-  // Profit Margin = Overall Total - Cost To Installer.
-  const profitMargin = overallTotal - costToInstaller;
-  
-  // Compute Hinge Count = (doors_0_36 * 2) + (doors_36_60 * 3) + (doors_60_82 * 4).
-  const hingeCount = 
-    (payload.part2.doors_0_36 * 2) +
-    (payload.part2.doors_36_60 * 3) +
-    (payload.part2.doors_60_82 * 4);
-  
+    Number(totalAllSectionCost || 0) +
+    Number(hingeCost || 0) +
+    Number(specialFeatures.customPaintCost || 0) +
+    Number(refinishingCost || 0) +
+    Number(measuringCost || 0) +
+    Number(installation.totalInstall || 0) +
+    Number(disposalCost || 0) +
+    Number(lazySusanSurchargeTotal || 0); // <<< ADDED Surcharge
+
+  // Profit Margin
+  const profitMargin = Number(overallTotal) - Number(costToInstaller);
+
+  // Hinge Count
+  const hingeCount =
+    (Number(payload.part2.doors_0_36 || 0) * 2) +
+    (Number(payload.part2.doors_36_60 || 0) * 3) +
+    (Number(payload.part2.doors_60_82 || 0) * 4);
+
+  // Format final results safely
+  const format = (num) => Number((Number(num) || 0).toFixed(2));
+
   return {
-    overallTotal,
-    doorCostTotal: totalAllSectionCost, // Total ALL Section Cost.
-    costToInstaller,
-    profitMargin,
-    hingeCost,
+    overallTotal: format(overallTotal),
+    doorCostTotal: format(totalAllSectionCost),
+    costToInstaller: format(costToInstaller),
+    profitMargin: format(profitMargin),
+    hingeCost: format(hingeCost),
     hingeCount,
-    specialFeatures,
-    refinishingCost,
-    measuringCost,
-    installation,
-    disposalCost,
-    sections: sectionBreakdown
+    specialFeatures: { customPaintCost: format(specialFeatures.customPaintCost) },
+    refinishingCost: format(refinishingCost),
+    measuringCost: format(measuringCost),
+    installation: { // Installation costs based on actual counts
+        doorInstall: format(installation.doorInstall),
+        drawerInstall: format(installation.drawerInstall),
+        lazySusanInstall: format(installation.lazySusanInstall),
+        totalInstall: format(installation.totalInstall)
+    },
+    // lazySusanSurcharge: format(lazySusanSurchargeTotal), // Optional: return surcharge separately
+    disposalCost: format(disposalCost),
+    doorsForDisposal,
+    lazySusansForDisposal,
+    sections: sectionBreakdown,
+    part2: payload.part2, // Contains original lazySusanQty needed by frontend
+    priceSetup: payload.priceSetup
   };
 }
 

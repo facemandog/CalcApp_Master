@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>nuDoors Estimator</title>
+  <title>nuCalc v3.4</title>
   <style>
     :root {
         --primary-color: #3CDBC0; /* Teal */
@@ -250,20 +250,45 @@
       flex-direction: column;
     }
 
-    .section { /* Specific styles for Rough Estimate Sections */
+    /* === Updated Section Styles === */
+    .section {
       background-color: var(--section-bg-color);
       border: 1px solid var(--border-color);
       padding: 1.5em;
-      padding-top: 2em; /* Make space for Section ID */
       border-radius: 4px;
-      flex: 1 1 calc(50% - 0.5em); /* Allow grow/shrink, aim for 2 cols */
-      min-width: 300px; /* Prevent sections becoming too narrow */
-      max-width: 25vw; /* Limit width to 1/4 viewport */
+      flex-grow: 0;        /* Do not grow */
+      flex-shrink: 1;      /* Allow shrinking */
+      flex-basis: 25vw;     /* Ideal base size */
+      min-width: 300px;      /* Min width before wrap */
+      max-width: 25vw;      /* Max width limit */
       box-sizing: border-box;
       position: relative;
       display: flex;
       flex-direction: column;
     }
+    /* === End Update === */
+
+    .section-header {
+        display: flex;
+        justify-content: center; /* Center items horizontally */
+        align-items: center;
+        margin-bottom: 1em;
+    }
+    .section-id {
+      text-align: center; /* Center text inside */
+      min-width: 85px; /* Define minimum background width */
+      font-weight: bold;
+      color: var(--primary-color);
+      font-size: 0.9em;
+      background-color: rgba(0,0,0,0.5);
+      padding: 3px 5px; /* Adjust padding as needed within the min-width */
+      border-radius: 3px;
+      white-space: nowrap;
+      /* margin-left: 1em; /* Remove margin if centering */
+      vertical-align: middle;
+      box-sizing: border-box; /* Ensure padding is included in width calculation */
+    }
+
 
      .section > label,
      .section > .dimension-inputs {
@@ -274,16 +299,7 @@
         align-self: flex-end; /* Align to the right */
      }
 
-    /* Section ID in top-right */
-    .section-header {
-        display: flex;
-        justify-content: center; /* <<< CHANGE: Center items horizontally */
-        align-items: center;
-        margin-bottom: 1em;
-        /* Optional: border */
-        /* border-bottom: 1px dashed #555; */
-        /* padding-bottom: 0.5em; */
-    }
+
     #roughEstimateContainer h2 {
         margin-bottom: 1em; /* Add space below heading */
     }
@@ -298,9 +314,10 @@
         width: 100%;
      }
 
-    /* Adjust width for the PARTS inside otherPartsContainer */
+    /* Adjust width for the PARTS inside otherPartsContainer (Now only 2 parts) */
      #otherPartsContainer .part {
-         flex-basis: calc(33.333% - 1em); /* Aim for 3 columns */
+         flex-basis: calc(50% - 0.75em); /* Aim for 2 columns */
+         min-width: 240px;
      }
 
     #addSectionBtn {
@@ -364,7 +381,7 @@
 
     /* Invoice Styles within #results */
     .invoice {
-        max-width: 50%; /* <<< APPLIED CHANGE: Half width */
+        max-width: 50%; /* Half width */
         min-width: 300px;
         margin: 1em auto; /* Center */
         padding: 2em;
@@ -500,19 +517,17 @@
 
     /* Larger Tablets / Small Laptops (e.g., <= 1024px) */
     @media (max-width: 1024px) {
-        body {
-            margin: 1.5em;
-        }
+        body { margin: 1.5em; }
         #mainConfigRow { gap: 1em; }
         #priceSetupContainer { flex-basis: 350px; }
         #otherPartsContainer { flex: 1 1 400px; }
         #otherPartsContainer .part { flex-basis: calc(50% - 0.75em); min-width: 240px; }
-        .section { flex-basis: calc(50% - 0.5em); min-width: 280px; }
-        .invoice {
-            padding: 1.5em;
-            /* Still 50% max-width from main rule, adjust if needed */
-            /* max-width: 60%; */
+        .section {
+             /* Keep flex properties */
+             flex-grow: 0; flex-shrink: 1; flex-basis: 25vw;
+             min-width: 280px; max-width: 25vw;
         }
+        .invoice { padding: 1.5em; /* max-width: 60%; */ }
     }
 
     /* Portrait Tablets and Smaller (e.g., <= 768px) */
@@ -527,51 +542,41 @@
         #priceSetupContainer.collapsed { width: var(--collapsed-width); flex-basis: var(--collapsed-width); }
         #otherPartsContainer { flex-basis: auto; width: 100%; }
         #otherPartsContainer .part { flex-basis: calc(50% - 0.5em); min-width: 220px; }
-        .section { flex-basis: calc(50% - 0.5em); min-width: 260px; }
+        .section {
+             /* Keep flex properties */
+             flex-grow: 0; flex-shrink: 1; flex-basis: 25vw;
+             min-width: 260px; max-width: 25vw;
+             /* On this size, maybe revert to 50% basis if 25vw is too small? */
+             /* flex-basis: calc(50% - 0.5em); max-width: none; */
+         }
         input[type="number"], select, button { padding: 0.9em; font-size: 1em; }
         button { width: 100%; box-sizing: border-box; }
-        #addSectionBtn { width: auto; display: inline-block; }
-        #togglePriceSetupBtn { width: auto; }
+        #addSectionBtn, #togglePriceSetupBtn { width: auto; display: inline-block; }
         button.remove-button { width: fit-content; padding: 0.5em 1em; align-self: flex-end; }
         #formActions { display: flex; flex-direction: column; gap: 0.8em; margin-top: 1em; }
         #calculateBtn, #clearAllBtn { margin-right: 0; width: 100%; }
-        .invoice {
-            padding: 1.5em;
-            max-width: 90%; /* <<< Allow wider on small tablets */
-        }
-         .invoice-header h1 { font-size: 1.6em; }
-         .invoice-header img.invoice-logo { height: 50px; }
-         .summary-table td, .details-table td { padding: 0.6em 0.3em; }
-         .summary-table .total-row td { font-size: 1.1em; }
+        .invoice { padding: 1.5em; max-width: 90%; }
+        .invoice-header h1 { font-size: 1.6em; }
+        .invoice-header img.invoice-logo { height: 50px; }
+        .summary-table td, .details-table td { padding: 0.6em 0.3em; }
+        .summary-table .total-row td { font-size: 1.1em; }
     }
 
     /* Very Small Screens (e.g., Phones) */
     @media (max-width: 600px) {
          #sectionsContainer .section {
-             flex-basis: 100%;
-             max-width: none; /* Remove vw limit */
-             min-width: 0;
+             flex-basis: 100%; /* Force sections to stack */
+             max-width: none; /* Remove the 25vw limit when stacked */
+             min-width: 0; /* Remove min-width when stacked */
              margin-bottom: 1em;
          }
-          #otherPartsContainer .part {
-             flex-basis: 100%;
-             min-width: 0;
-             margin-bottom: 1em;
-          }
-          /* Optional: Adjust collapsed width on phones */
-          /* :root { --collapsed-width: 180px; } */
-          #priceSetupContainer.collapsed {
-              width: var(--collapsed-width);
-              flex-basis: var(--collapsed-width);
-          }
-         .invoice {
-             padding: 1em;
-             max-width: 95%; /* <<< Allow almost full width */
-         }
+         #otherPartsContainer .part { flex-basis: 100%; min-width: 0; margin-bottom: 1em; }
+         /* #priceSetupContainer.collapsed { width: var(--collapsed-width); flex-basis: var(--collapsed-width); } */
+         .invoice { padding: 1em; max-width: 95%; }
     }
 
 
-    /* Print Styles */
+    /* Print Styles (Keep as is) */
 	@media print {
         body { background-color: white; color: black; margin: 1em; font-size: 10pt; }
         header, #instructions, #exampleImage, form, #printButtonContainer, .toggle-details-btn { display: none !important; }
@@ -580,7 +585,7 @@
         #internalDetails.print-section .details-table td { color: black !important; border-bottom: 1px solid #eee !important; }
         #internalDetails.print-section h3 { color: black !important; }
         #results { margin-top: 0; border: none; padding: 0; background-color: white; color: black; }
-        .invoice { border: 1px solid #ccc; box-shadow: none; padding: 1em; max-width: 100% !important; /* <<< Ensure full width for print */ background-color: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .invoice { border: 1px solid #ccc; box-shadow: none; padding: 1em; max-width: 100% !important; background-color: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         .invoice-header { border-bottom: 1px solid #ccc; }
         .invoice-header img.invoice-logo { filter: grayscale(100%); opacity: 0.8; }
         .invoice h1, .invoice h2 { color: black !important; }
@@ -595,7 +600,7 @@
 </head>
 <body>
   <header>
-    <h1>nuDoors Estimator</h1>
+    <h1>nuCalc v3.4</h1> <!-- Updated Name -->
     <img src="assets/logo.png" alt="Logo">
   </header>
 
@@ -606,10 +611,9 @@
       <li>Measure the Height and Width of each section and enter these dimensions along with the Style and desired finish into "Section Calculator | By Square Foot". Use the "+ Add Section" button for multiple areas.</li>
       <li>In "Piece Count", enter the total number of Drawers, Doors (by size), and Lazy Susans for the entire project.</li>
       <li>In "Special Features", enter a 1 for each custom paint color desired (adds a flat fee).</li>
-      <li>In "Disposal Quantities", enter the quantity of old Doors and Lazy Susans to be removed.</li>
-      <li>Review and adjust the default costs in "Piece & Install Pricing" if needed (your settings are saved locally). Use the button to hide/show this section (it collapses horizontally).</li>
+      <li>Review and adjust the default costs in "Piece & Install Pricing" if needed (your settings are saved locally). Use the button to hide/show this section. Set "Calculate Disposal Cost?" to "Yes" if needed (cost based on piece count).</li>
       <li>Press "Calculate Estimate" to generate the estimate below.</li>
-      <li>The results section includes a button to show/hide "Internal Details" (like profit margin). If this section is visible when you print, it will be included in the printout.</li>
+      <li>The results section includes a button to show/hide "Internal Details" (incl. disposal breakdown). If this section is visible when you print, it will be included in the printout.</li>
 	  <li>Tip: Follow our playlists for everything from installation
 	  guidance to our ordering guide at <a href="https://youtube.com/nudoors" target="_blank" rel="noopener noreferrer" style="color: cyan;">The nuDoors Official Channel</a></li>
     </ol>
@@ -624,26 +628,36 @@
     <!-- Part 1: Rough Estimate (Dynamic Sections) -->
     <div id="roughEstimateContainer">
       <h2>Section Calculator | By Square Foot</h2>
-      <div id="sectionsContainer" class="flex-row"> <!-- Added flex-row class -->
+      <div id="sectionsContainer" class="flex-row">
         <!-- Dynamic sections will be appended here -->
       </div>
       <button type="button" id="addSectionBtn">+ Add Section</button>
     </div>
 
-    <!-- NEW WRAPPER for Price Setup and Other Parts -->
+    <!-- Wrapper for Price Setup and Other Parts -->
     <div id="mainConfigRow">
 
-        <!-- Price Setup Section (Now first in this row) -->
+        <!-- Price Setup Section -->
         <div id="priceSetupContainer">
           <h2>
-            <span>Piece & Install Pricing</span> <!-- Wrapped title in span -->
-            <button type="button" id="togglePriceSetupBtn">Hide Prices</button>
+            <span>Piece & Install Pricing</span>
+            <button type="button" id="togglePriceSetupBtn">Hide</button> <!-- Changed Button Text -->
           </h2>
+		  <small>Enter your desired charge per
+			Sq Ft & indicate if you will be disposing
+			the old doors and drawers.</small>
+			<small>All prices will
+			be saved on your device for later use.
+
+			Click "Hide"
+			To collapse this section. </small>
+		  <br>
           <div id="priceSetupContent">
             <div class="price-setup-columns">
+              <!-- Left Column -->
               <div>
                 <label>
-                  Door Install Price:
+                  Door Install Charge:
                   <input type="number" name="pricePerDoor" value="10" step="0.1" required />
                 </label>
                 <small>Suggested MSRP: $10 / door</small>
@@ -657,7 +671,21 @@
                   <input type="number" name="refinishingCostPerSqFt" value="40" step="0.1" required />
                 </label>
                 <small>Suggested MSRP: $40 / sq ft</small>
+
+                <!-- NEW DISPOSAL DROPDOWN -->
+                <label>
+                  Are you Responsible
+				  for disposal?
+                  <select name="calculateDisposal">
+                    <option value="no" selected>No</option>
+                    <option value="yes">Yes</option>
+                  </select>
+                </label>
+                <small>If Yes, cost is based on Piece Count & Disposal Rate below.</small>
+                <!-- END NEW DROPDOWN -->
+
               </div>
+              <!-- Right Column -->
               <div>
                 <label>
                   Lazy Susan Install Price:
@@ -673,16 +701,21 @@
                   Disposal Cost per Door:
                   <input type="number" name="doorDisposalCost" value="5" step="0.1" required />
                 </label>
-                <small>Suggested: $5 / door (Lazy Susan counts as 2)</small>
+                <small>Used if "Calculate Disposal Cost?" is Yes. (Lazy Susan = 2 doors)</small>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Other Parts Container (Now second in this row) -->
+        <!-- Other Parts Container -->
         <div id="otherPartsContainer">
           <div class="part" id="hingeDrilling">
             <h2>Piece Count</h2>
+			<small>Enter the amount of each item in all sections.
+
+			Be careful to count the doors within the
+			correct noted ranges (IE. 0-36" in Height)</small>
+			<br>
             <label>
               Number of Drawers:
               <input type="number" name="numDrawers" value="0" min="0" />
@@ -707,6 +740,9 @@
 
           <div class="part" id="specialFeatures">
             <h2>Special Features</h2>
+			<small>Enter the amount of custom colors requested
+			by the client.</small>
+			<br>
             <label>
               Custom Paint Choices (Quantity):
               <input type="number" name="customPaintQty" value="0" min="0" />
@@ -714,24 +750,14 @@
             <small>Adds $200 per custom color to the total charge.</small>
           </div>
 
-          <div class="part" id="disposalCost">
-            <h2>Disposal Quantities</h2>
-            <label>
-              Number of Doors for Disposal:
-              <input type="number" name="doorDisposalQty" value="0" min="0" />
-            </label>
-            <label>
-              Number of Lazy Susans for Disposal:
-              <input type="number" name="lazySusanDisposalQty" value="0" min="0" />
-            </label>
-             <small>Enter quantities to calculate disposal cost using rate from Price Setup.</small>
-          </div>
+          <!-- REMOVED Disposal Quantities Part -->
+
         </div> <!-- End otherPartsContainer -->
 
     </div> <!-- End mainConfigRow -->
 
 
-    <!-- Calculate and Clear All Buttons (Wrapped in a div) -->
+    <!-- Calculate and Clear All Buttons -->
     <div id="formActions">
         <button type="submit" id="calculateBtn">Calculate Estimate</button>
         <button type="button" id="clearAllBtn">Clear All Fields</button>
@@ -743,7 +769,7 @@
       <!-- Estimate will be displayed here -->
   </div>
 
-  <!-- Print Button Container (initially hidden) -->
+  <!-- Print Button Container -->
   <div id="printButtonContainer">
       <button type="button" id="printEstimate">Print Estimate</button>
   </div>
