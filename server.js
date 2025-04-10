@@ -1,80 +1,78 @@
-// server.js
+// --- START OF FILE server.js ---
 
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { calculateOverallTotal } = require('./calculation'); // Assuming calculation.js is correct
+// Assuming calculation.js is in the same directory or configured correctly in package.json
+const { calculateOverallTotal } = require('./calculation');
 
 const app = express();
+// PORT is mainly for local development; Vercel assigns its own port dynamically
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json()); // Make sure this is before your routes
+app.use(express.json()); // Middleware to parse JSON request bodies
+
+// --- CRITICAL FOR VERCEL: Ensure 'public' exists at the root relative to server.js ---
+// This line tells Express to serve files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- Load Pricing Data ---
-let pricingData = {}; // Initialize empty
-const pricingDataPath = path.join(__dirname, 'pricingData.json');
-
+let pricingData;
 try {
-    // Check if file exists before reading
-    if (fs.existsSync(pricingDataPath)) {
-        const rawData = fs.readFileSync(pricingDataPath);
-        pricingData = JSON.parse(rawData);
-        console.log("pricingData.json loaded successfully.");
-    } else {
-        console.error("ERROR: pricingData.json not found at path:", pricingDataPath);
-        // Optionally, handle this case - maybe default pricing or throw error
-        // For now, will proceed with empty pricingData, calculations might return 0
-    }
+  // --- CRITICAL FOR VERCEL: Ensure 'pricingData.json' exists at the root ---
+  const pricingPath = path.join(__dirname, 'pricingData.json');
+  if (fs.existsSync(pricingPath)) {
+      pricingData = JSON.parse(fs.readFileSync(pricingPath));
+      console.log("Successfully loaded pricingData.json"); // Good for debugging logs
+  } else {
+      // Log a critical error if the file is missing. The app might not function correctly.
+      console.error("CRITICAL ERROR: pricingData.json not found at path:", pricingPath);
+      console.error("Ensure pricingData.json is in the root directory and committed to the repository.");
+      // Assign empty object to prevent immediate crash, but calculations will fail.
+      pricingData = {};
+  }
 } catch (error) {
-    console.error("Error loading or parsing pricingData.json:", error);
-    // Handle error appropriately, maybe exit or use default empty object
+    console.error("CRITICAL ERROR reading or parsing pricingData.json:", error);
+    console.error("Ensure pricingData.json is valid JSON.");
+    // Fallback to prevent crash, but calculations will fail.
+    pricingData = {};
 }
-// --- End Load Pricing Data ---
 
 
-// --- Updated /calculate Route ---
 app.post('/calculate', (req, res) => {
+  // Check if pricingData loaded correctly before attempting calculation
+  if (!pricingData || Object.keys(pricingData).length === 0) {
+     console.error("Calculation error: pricingData was not loaded correctly during server startup.");
+     // Send a server configuration error status
+     return res.status(500).json({ error: 'Server configuration error: Pricing data missing or invalid.' });
+  }
   try {
     const payload = req.body;
-
-    // Basic Payload Validation (Optional but Recommended)
-    if (!payload || typeof payload !== 'object' || !payload.sections || !payload.part2 || !payload.priceSetup) {
-        console.error("Invalid payload received:", payload);
-        return res.status(400).json({ error: 'Invalid request payload structure.' });
+    // Add validation if necessary for payload format
+    if (!payload || typeof payload !== 'object') {
+        return res.status(400).json({ error: 'Invalid request body: Payload missing or not an object.' });
     }
-
-    // Call the calculation function (MUST pass pricingData)
     const result = calculateOverallTotal(payload, pricingData);
-
-    res.json(result); // Send the detailed result object
-
+    res.json(result);
   } catch (error) {
-    // --- Enhanced Error Logging ---
-    console.error('-----------------------------------');
-    console.error('Calculation Error Details:');
-    console.error('Timestamp:', new Date().toISOString());
-    // Log the specific error message and stack trace
-    console.error('Error Message:', error.message);
-    console.error('Error Stack:', error.stack);
-    // Log the payload that caused the error (careful with sensitive data in real logs)
-    // Consider logging only parts of it if necessary
-    console.error('Payload Received:', JSON.stringify(req.body, null, 2)); // Log payload
-    console.error('-----------------------------------');
-
-    // Send a generic error response to the client
+    // Log the detailed error on the server (visible in Vercel function logs)
+    console.error('Calculation endpoint error:', error.message);
+    console.error(error.stack); // Log stack trace for more details
+    // Send a generic error message to the client
     res.status(500).json({ error: 'Internal server error during calculation.' });
-    // --- End Enhanced Error Logging ---
   }
 });
-// --- End Updated /calculate Route ---
 
-// Catch-all for serving index.html for client-side routing (if needed, not typical for this app)
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'public', 'index.html'));
-// });
+// --- IMPORTANT: Conditional Listening ---
+// Only run app.listen when running locally (e.g., NODE_ENV is not 'production')
+// Vercel environment usually sets NODE_ENV to 'production'
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server running locally on http://localhost:${PORT}`);
+  });
+}
 
+// --- IMPORTANT: Export the Express app for Vercel ---
+// This allows Vercel's infrastructure to handle requests using your Express setup
+module.exports = app;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// --- END OF FILE server.js ---
