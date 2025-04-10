@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Refacing Calculator</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      margin: 2em;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1em;
+    }
+    .section {
+      background-color: #333;
+      border: 1px solid #2af5bf;
+      padding: 1em;
+      width: 300px;
+      position: relative;
+    }
+    .section h3 {
+      margin-top: 0;
+      color: #2af5bf;
+    }
+    button, input, select {
+      background-color: #2af5bf;
+      border: none;
+      color: black;
+      padding: 0.5em;
+      margin: 0.25em 0;
+      border-radius: 4px;
+    }
+    button:hover, input:hover, select:hover {
+      opacity: 0.8;
+    }
+    #addSectionBtn, #calculateBtn {
+      background-color: #2af5bf;
+      color: black;
+      padding: 0.75em 1.5em;
+      font-size: 1em;
+      cursor: pointer;
+      margin: 0.5em 0;
+    }
+    .removeSectionBtn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background-color: red;
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      border: none;
+      cursor: pointer;
+    }
+    /* Style for the results container */
+    #results {
+      margin-top: 1em;
+      background-color: #222;
+      color: #2af5bf;
+      padding: 1em;
+      border-radius: 4px;
+    }
+    .result-section {
+      border: 1px solid #2af5bf;
+      margin: 0.5em 0;
+      padding: 0.5em;
+      border-radius: 4px;
+    }
+    .result-section h3 {
+      margin: 0;
+      color: #2af5bf;
+    }
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.25em 0;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="color:#2af5bf;">Refacing Calculator</h1>
+  <form id="calcForm">
+    <div class="container" id="sectionsContainer">
+      <!-- Section templates will be inserted here -->
+    </div>
+    <button type="button" id="addSectionBtn">+ Add Section</button>
+    <br/><br/>
+    <button type="submit" id="calculateBtn">Calculate</button>
+  </form>
+
+  <!-- The results will be displayed here in a formatted UI -->
+  <div id="results"></div>
+  
+  <script src="script.js"></script>
+</body>
+</html>
