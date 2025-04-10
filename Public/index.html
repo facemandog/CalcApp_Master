@@ -18,7 +18,7 @@
     }
     header h1 {
       margin: 0;
-      color: #2af5bf;
+      color: #3CDBC0;
       font-size: 2em;
     }
     header img {
@@ -28,7 +28,7 @@
     #instructions {
       background-color: #222;
       padding: 1em;
-      border-radius: 4px;
+      border-radius: 2px;
       margin-bottom: 1em;
     }
     #instructions strong {
@@ -45,25 +45,25 @@
     #exampleImage img {
       max-width: 90%;
       height: auto;
-      border: 2px solid #2af5bf;
-      border-radius: 4px;
+      border: 2px solid #3CDBC0;
+      border-radius: 2px;
     }
     /* Price Setup Section (collapsible) */
     #priceSetupContainer {
       background-color: #333;
-      border: 1px solid #2af5bf;
+      border: 1px solid #3CDBC0;
       padding: 1em;
-      border-radius: 4px;
-      width: 280px;
+      border-radius: 2px;
+      width: 450px;
       box-sizing: border-box;
-      margin-bottom: 1em;
+      margin-bottom: 0.5em;
     }
     #togglePriceSetupBtn {
       margin-bottom: 0.5em;
       padding: 0.4em 0.8em;
-      background-color: #2af5bf;
+      background-color: #3CDBC0;
       border: none;
-      border-radius: 4px;
+      border-radius: 2px;
       cursor: pointer;
       color: black;
     }
@@ -73,7 +73,7 @@
     }
     /* Form elements */
     h2 {
-      color: #2af5bf;
+      color: #3CDBC0;
       font-size: 1.2em;
       margin-bottom: 0.5em;
     }
@@ -82,11 +82,11 @@
       margin: 0.5em 0;
     }
     input, select, button {
-      background-color: #2af5bf;
+      background-color: #3CDBC0;
       border: none;
-      padding: 0.5em;
-      margin: 0.25em 0;
-      border-radius: 4px;
+      padding: 0.7em;
+      margin: 0.85em 0;
+      border-radius: 2px;
       color: black;
     }
     button:hover, input:hover, select:hover {
@@ -104,10 +104,10 @@
     }
     .part, .section {
       background-color: #333;
-      border: 1px solid #2af5bf;
+      border: 1px solid #3CDBC0;
       padding: 1em;
-      border-radius: 4px;
-      width: 280px;
+      border-radius: 2px;
+      width: 260px;
       box-sizing: border-box;
       position: relative;
     }
@@ -117,7 +117,7 @@
       top: 5px;
       right: 5px;
       font-weight: bold;
-      color: #2af5bf;
+      color: #3CDBC0;
     }
     #roughEstimateContainer {
       margin-bottom: 1em;
@@ -125,43 +125,47 @@
     #sectionsContainer .section {
       margin-bottom: 0.5em;
     }
-    /* Other Parts styling */
-    .part {
-      /* No changes needed here */
+    /* New Disposal Cost Part (quantities only) */
+    .part#disposalCost {
+      background-color: #333;
+      border: 1px solid #3CDBC0;
+      padding: 1em;
+      border-radius: 2px;
+      width: 260px;
+      box-sizing: border-box;
     }
-    /* Removed Total Measuring Costs section */
-    
     /* Clear All Button styling */
     #clearAllBtn {
-      background-color: #2af5bf;
+      background-color: #3CDBC0;
       color: black;
       padding: 0.5em 1em;
-      border-radius: 4px;
+      border-radius: 2px;
       cursor: pointer;
       margin-top: 1em;
+      font-weight: bold;
     }
-    
     /* Buttons */
     #addSectionBtn, #calculateBtn {
-      background-color: #2af5bf;
+      background-color: #3CDBC0;
       color: black;
       padding: 0.5em 1em;
       cursor: pointer;
-      border-radius: 4px;
+      border-radius: 2px;
       margin-top: 0.5em;
+      font-weight: bold;
     }
     #calculateBtn {
-      padding: 0.75em 1.5em;
-      font-size: 1em;
+      padding: 0.65em 1.5em;
+      font-size: 1.1em;
       margin-top: 1em;
     }
     /* Results display */
     #results {
       margin-top: 1em;
       background-color: #222;
-      color: #2af5bf;
+      color: #3CDBC0;
       padding: 1em;
-      border-radius: 4px;
+      border-radius: 2px;
     }
     .results-container {
       display: flex;
@@ -182,9 +186,9 @@
     button#toggleProfit, button#printEstimate {
       padding: 0.5em 1em;
       margin: 0.5em 0.5em 0 0;
-      border-radius: 4px;
+      border-radius: 2px;
       cursor: pointer;
-      background-color: #2af5bf;
+      background-color: #3CDBC0;
       border: none;
       color: black;
     }
@@ -198,8 +202,8 @@
     }
     small {
       display: block;
-      font-size: 0.8em;
-      color: #2af5bf;
+      font-size: 0.85em;
+      color: #F2FCFB;
       margin-top: 0.25em;
     }
   </style>
@@ -217,7 +221,7 @@
       <li>Measure the Height and Width of each section and enter these dimensions along with the Style and desired finish into "Measurements &amp; Styles".</li>
       <li>In the "Hinge Count" section, enter the total number of doors of each size range to determine the number of hinges required.</li>
       <li>In "Special Features", enter a 1 for each custom paint color desired.</li>
-      <li>In "Price Setup", input your pricing values for: Price per Door, Price per Drawer, Refinishing Cost per Sq Ft, Price per Lazy Susan, and your On Site Measuring charge.</li>
+      <li>In "Price Setup", input your pricing values for: Price per Door, Price per Drawer, Refinishing Cost per Sq Ft, Price per Lazy Susan, your On Site Measuring charge, and your Door Disposal Cost.</li>
       <li>Then press "Calculate" to get your estimated price.</li>
     </ol>
   </div>
@@ -240,43 +244,57 @@
     <!-- Price Setup Section (collapsible) -->
     <div id="priceSetupContainer">
       <h2>
-        Price Setup | Install Cost 
+        Piece & Install Pricing 
         <button type="button" id="togglePriceSetupBtn">Hide Price Setup</button>
       </h2>
       <div id="priceSetupContent">
-        <label>
-          Price per Door:
-          <input type="number" name="pricePerDoor" value="10" step="0.1" required />
-        </label>
-        <small>Suggested MSRP: $10</small>
-        <label>
-          Price per Drawer:
-          <input type="number" name="pricePerDrawer" value="10" step="0.1" required />
-        </label>
-        <small>Suggested MSRP: $10</small>
-        <label>
-          Refinishing Cost per Sq Ft:
-          <input type="number" name="refinishingCostPerSqFt" value="40" step="0.1" required />
-        </label>
-        <small>Suggested MSRP: $40</small>
-        <label>
-          Price per Lazy Susan:
-          <input type="number" name="pricePerLazySusan" value="20" step="0.1" required />
-        </label>
-        <small>Suggested MSRP: $20</small>
-        <label>
-          On Site Measuring:
-          <input type="number" name="onSiteMeasuring" value="200" step="0.1" required />
-        </label>
-        <small>Minimum Suggested MSRP: $200</small>
+        <!-- Left Column of Price Setup -->
+        <div style="display: flex; gap: 1em;">
+          <div style="flex: 1;">
+            <label>
+              Price per Door:
+              <input type="number" name="pricePerDoor" value="10" step="0.1" required />
+            </label>
+            <small>Suggested MSRP: $10</small>
+            <label>
+              Price per Drawer:
+              <input type="number" name="pricePerDrawer" value="10" step="0.1" required />
+            </label>
+            <small>Suggested MSRP: $10</small>
+            <label>
+              Refinishing Cost per Sq Ft:
+              <input type="number" name="refinishingCostPerSqFt" value="40" step="0.1" required />
+            </label>
+            <small>Suggested MSRP: $40</small>
+          </div>
+          <!-- Right Column of Price Setup -->
+          <div style="flex: 1;">
+            <label>
+              Price per Lazy Susan:
+              <input type="number" name="pricePerLazySusan" value="20" step="0.1" required />
+            </label>
+            <small>Suggested MSRP: $20</small>
+            <label>
+              On Site Measuring:
+              <input type="number" name="onSiteMeasuring" value="200" step="0.1" required />
+            </label>
+            <small>Minimum Suggested MSRP: $200</small>
+            <label>
+              Door Disposal Cost:
+              <input type="number" name="doorDisposalCost" value="5" step="0.1" required />
+            </label>
+            <small>Suggested Disposal Cost: $5 per door</small>
+          </div>
+        </div>
+        <br>
       </div>
     </div>
     
     <!-- Other Parts arranged in a horizontal flex row -->
     <div class="flex-row" id="otherPartsContainer">
-      <!-- Hinge Drilling Calculations -->
+      <!-- Rename "Hinge Drilling Calculations" to "Piece Count" and include Lazy Susan field -->
       <div class="part" id="hingeDrilling">
-        <h2>Hinge Drilling Calculations</h2>
+        <h2>Piece Count</h2>
         <label>
           Number of Drawers:
           <input type="number" name="numDrawers" value="0" min="0" />
@@ -293,12 +311,16 @@
           Doors 60.01"-82":
           <input type="number" name="doors_60_82" value="0" min="0" />
         </label>
+        <!-- New field for Lazy Susans in Piece Count -->
+        <label>
+          Number of Lazy Susans:
+          <input type="number" name="lazySusanQty" value="0" min="0" />
+        </label>
       </div>
       
       <!-- Special Features -->
       <div class="part" id="specialFeatures">
         <h2>Special Features</h2>
-        <!-- Removed Lazy Susan Quantity -->
         <label>
           Custom Paint Choice Quantity:
           <input type="number" name="customPaintQty" value="0" min="0" />
@@ -306,12 +328,23 @@
         <small>for a custom paint color $200 will be added to the charge</small>
       </div>
       
-      <!-- (Removed Total Measuring Costs Section) -->
+      <!-- Disposal Cost Part (for quantities) -->
+      <div class="part" id="disposalCost">
+        <h2>Disposal Cost</h2>
+        <label>
+          Door Disposal Quantity:
+          <input type="number" name="doorDisposalQty" value="0" min="0" />
+        </label>
+        <label>
+          Lazy Susan Disposal Quantity:
+          <input type="number" name="lazySusanDisposalQty" value="0" min="0" />
+        </label>
+      </div>
     </div>
     
     <!-- Calculate and Clear All Buttons -->
     <button type="submit" id="calculateBtn">Calculate</button>
-    <button type="button" id="clearAllBtn">Clear All</button>
+    <button type="button" id="clearAllBtn">Clear All Fields</button>
   </form>
   
   <!-- Results Section -->
@@ -319,7 +352,6 @@
   
   <!-- Toggle and Print Buttons (outside the form) -->
   <div style="margin-top: 1em;">
-    <button id="toggleProfitBtn" style="padding:0.5em 1em;">Show Profit Details</button>
     <button id="printEstimate" style="padding:0.5em 1em;">Print Estimate</button>
   </div>
   

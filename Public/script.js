@@ -107,8 +107,9 @@ function createRoughEstimateSection(index) {
     removeBtn.textContent = 'Remove';
     removeBtn.style.backgroundColor = 'red';
     removeBtn.style.color = 'white';
-    removeBtn.style.borderRadius = '4px';
+    removeBtn.style.borderRadius = '1px';
     removeBtn.style.marginTop = '0.5em';
+    removeBtn.style.marginLeft = '4.8em';
     removeBtn.addEventListener('click', () => {
       sectionDiv.remove();
       updateSectionIndices();
@@ -175,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     globalTotalSqFt = totalSqFt;
     
-    // Compute Total Doors from Hinge Drilling inputs.
+    // Compute Total Doors from Piece Count inputs.
     const doors0 = parseInt(document.querySelector('input[name="doors_0_36"]').value) || 0;
     const doors36 = parseInt(document.querySelector('input[name="doors_36_60"]').value) || 0;
     const doors60 = parseInt(document.querySelector('input[name="doors_60_82"]').value) || 0;
@@ -192,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Compute installation details.
     globalDoorInstallCost = globalTotalDoors * pricePerDoor;
     globalDrawerInstallCost = globalTotalDrawers * pricePerDrawer;
-    const lazySusanQty = 0; // Since Lazy Susan field is removed.
+    const lazySusanQty = parseInt(document.querySelector('input[name="lazySusanQty"]').value) || 0;
     globalLazySusanInstallCost = lazySusanQty * pricePerLazySusan;
   };
   
@@ -217,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reinitialize dynamic sections.
     initializeSections();
     
-    // Set default values for Hinge Drilling and Special Features
+    // Set default values for Piece Count and Special Features.
     document.querySelector('input[name="numDrawers"]').value = "0";
     document.querySelector('input[name="doors_0_36"]').value = "0";
     document.querySelector('input[name="doors_36_60"]').value = "0";
@@ -234,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateTotals();
   });
   
-  // On form submit, gather data and build the payload.
+  // On form submit, build the payload and send it.
   calcForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const sections = [];
@@ -257,23 +258,27 @@ document.addEventListener('DOMContentLoaded', () => {
         doors_0_36: parseInt(formData.get('doors_0_36')) || 0,
         doors_36_60: parseInt(formData.get('doors_36_60')) || 0,
         doors_60_82: parseInt(formData.get('doors_60_82')) || 0,
+        lazySusanQty: parseInt(formData.get('lazySusanQty')) || 0,
         totalDoors: globalTotalDoors
       },
       part3: {
-        // Lazy Susan field is removed.
         customPaintQty: parseInt(formData.get('customPaintQty')) || 0
       },
       part5: {
-        totalSqFt: globalTotalSqFt,
-        // On Site Measuring is now part of Price Setup; we'll get it from there.
+        totalSqFt: globalTotalSqFt
       },
       priceSetup: {
         pricePerDoor: parseFloat(formData.get('pricePerDoor')) || 0,
         pricePerDrawer: parseFloat(formData.get('pricePerDrawer')) || 0,
         refinishingCostPerSqFt: parseFloat(formData.get('refinishingCostPerSqFt')) || 0,
         pricePerLazySusan: parseFloat(formData.get('pricePerLazySusan')) || 0,
-        // On Site Measuring is included here.
-        onSiteMeasuring: parseFloat(formData.get('onSiteMeasuring')) || 0
+        onSiteMeasuring: parseFloat(formData.get('onSiteMeasuring')) || 0,
+        doorDisposalCost: parseFloat(formData.get('doorDisposalCost')) || 0
+      },
+      // The disposal quantities come from the Disposal Cost part.
+      disposal: {
+        doorDisposalQty: parseInt(formData.get('doorDisposalQty')) || 0,
+        lazySusanDisposalQty: parseInt(formData.get('lazySusanDisposalQty')) || 0
       }
     };
     
@@ -302,8 +307,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let allSectionsCost = (typeof resultData.doorCostTotal === 'number' && !isNaN(resultData.doorCostTotal))
       ? resultData.doorCostTotal
       : 0;
-    let installerCost = (typeof resultData.installerCost === 'number' && !isNaN(resultData.installerCost))
-      ? resultData.installerCost
+    let costToInstaller = (typeof resultData.costToInstaller === 'number' && !isNaN(resultData.costToInstaller))
+      ? resultData.costToInstaller
       : 0;
     let profitMargin = (typeof resultData.profitMargin === 'number' && !isNaN(resultData.profitMargin))
       ? resultData.profitMargin
@@ -334,10 +339,10 @@ document.addEventListener('DOMContentLoaded', () => {
     htmlRight += `<p><strong>Drawer Install Cost:</strong> $${globalDrawerInstallCost.toFixed(2)}</p>`;
     htmlRight += `<p><strong>Lazy Susan Install Cost:</strong> $${globalLazySusanInstallCost.toFixed(2)}</p>`;
     htmlRight += `<p><strong>Total Sq Ft:</strong> ${globalTotalSqFt.toFixed(2)}</p>`;
-    htmlRight += `<p><strong>Installer Cost:</strong> $${installerCost.toFixed(2)}</p>`;
+    htmlRight += `<p style="margin-top:20px;"><strong>Hinge Count:</strong> ${resultData.hingeCount}</p>`;
+    htmlRight += `<p><strong>Cost To Installer:</strong> $${costToInstaller.toFixed(2)}</p>`;
     htmlRight += `<p><strong>Profit Margin:</strong> $${profitMargin.toFixed(2)}</p>`;
-    // New hinge count field:
-    htmlRight += `<p><strong>Hinge Count:</strong> ${resultData.hingeCount}</p>`;
+    htmlRight += `<p><strong>Disposal Cost:</strong> $${resultData.disposalCost.toFixed(2)}</p>`;
     
     let finalHtml = `<div class="results-container">`;
     finalHtml += `<div class="results-left">${htmlLeft}</div>`;
@@ -363,12 +368,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
     
-    // Toggle Profit Details is part of the Installation Details block;
-    // if you want a separate toggle, adjust accordingly.
+    // Toggle Profit Details button (if needed).
     document.getElementById('toggleProfitBtn').addEventListener('click', () => {
-      // In this implementation profit details are included in the installation details,
-      // so you may choose to merge these toggles if desired.
-      // For now, this button will simply alert the user.
       alert("Profit Details are included in the Installation Details section.");
     });
     
