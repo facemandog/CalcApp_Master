@@ -131,6 +131,37 @@ function updateSectionIndices() {
   });
 }
 
+/**
+ * Loads pricing settings from localStorage and updates the Price Setup fields.
+ */
+function loadPricingSettings() {
+  const pricingFields = [
+    'pricePerDoor',
+    'pricePerDrawer',
+    'refinishingCostPerSqFt',
+    'pricePerLazySusan',
+    'onSiteMeasuring',
+    'doorDisposalCost'
+  ];
+  pricingFields.forEach(fieldName => {
+    const input = document.querySelector(`input[name="${fieldName}"]`);
+    if (input) {
+      const savedValue = localStorage.getItem(fieldName);
+      if (savedValue !== null) {
+        input.value = savedValue;
+      }
+    }
+  });
+}
+
+/**
+ * Saves a pricing field's value to localStorage.
+ * @param {Event} e - The event object.
+ */
+function savePricingSetting(e) {
+  localStorage.setItem(e.target.name, e.target.value);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const sectionsContainer = document.getElementById('sectionsContainer');
   const addSectionBtn = document.getElementById('addSectionBtn');
@@ -138,7 +169,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const togglePriceSetupBtn = document.getElementById('togglePriceSetupBtn');
   const priceSetupContent = document.getElementById('priceSetupContent');
   const clearAllBtn = document.getElementById('clearAllBtn');
-
+  
+  // Load pricing settings from localStorage.
+  loadPricingSettings();
+  
+  // Attach change listeners to pricing input fields.
+  const pricingFields = [
+    'pricePerDoor',
+    'pricePerDrawer',
+    'refinishingCostPerSqFt',
+    'pricePerLazySusan',
+    'onSiteMeasuring',
+    'doorDisposalCost'
+  ];
+  pricingFields.forEach(fieldName => {
+    const input = document.querySelector(`input[name="${fieldName}"]`);
+    if (input) {
+      input.addEventListener('change', savePricingSetting);
+    }
+  });
+  
   // Price Setup Toggle: only hide/show the inner content.
   togglePriceSetupBtn.addEventListener('click', () => {
     if (priceSetupContent.style.display === 'none' || priceSetupContent.style.display === '') {
@@ -275,7 +325,6 @@ document.addEventListener('DOMContentLoaded', () => {
         onSiteMeasuring: parseFloat(formData.get('onSiteMeasuring')) || 0,
         doorDisposalCost: parseFloat(formData.get('doorDisposalCost')) || 0
       },
-      // The disposal quantities come from the Disposal Cost part.
       disposal: {
         doorDisposalQty: parseInt(formData.get('doorDisposalQty')) || 0,
         lazySusanDisposalQty: parseInt(formData.get('lazySusanDisposalQty')) || 0
@@ -295,85 +344,98 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Updated displayResults function with two-column layout.
+  // Updated displayResults function with invoice-style layout.
   function displayResults(resultData) {
     if (resultData.error) {
       document.getElementById('results').innerHTML = `<h2>Error:</h2><p>${resultData.error}</p>`;
       return;
     }
+    
+    // Format today's date.
+    const today = new Date();
+    const dateStr = today.toLocaleDateString();
+    
+    // Extract calculated values.
     let overall = (typeof resultData.overallTotal === 'number' && !isNaN(resultData.overallTotal))
-      ? resultData.overallTotal
-      : 0;
+      ? resultData.overallTotal.toFixed(2)
+      : "0.00";
     let allSectionsCost = (typeof resultData.doorCostTotal === 'number' && !isNaN(resultData.doorCostTotal))
-      ? resultData.doorCostTotal
-      : 0;
+      ? resultData.doorCostTotal.toFixed(2)
+      : "0.00";
     let costToInstaller = (typeof resultData.costToInstaller === 'number' && !isNaN(resultData.costToInstaller))
-      ? resultData.costToInstaller
-      : 0;
+      ? resultData.costToInstaller.toFixed(2)
+      : "0.00";
     let profitMargin = (typeof resultData.profitMargin === 'number' && !isNaN(resultData.profitMargin))
-      ? resultData.profitMargin
-      : 0;
+      ? resultData.profitMargin.toFixed(2)
+      : "0.00";
     
-    // Left column: main cost results.
-    let htmlLeft = `<h1 style="font-size:2em;">Final Results</h1>`;
-    htmlLeft += `<h2 style="font-size:1.5em;">Overall Total: $${overall.toFixed(2)}</h2>`;
-    if (resultData.sections && resultData.sections.length > 0) {
-      resultData.sections.forEach((sec, idx) => {
-        htmlLeft += `<h3 style="font-weight:bold;">Section ${idx + 1}</h3>`;
-        htmlLeft += `<p>Section Cost: $${(sec.totalSectionCost || 0).toFixed(2)}</p>`;
-        htmlLeft += `<br>`;
-      });
-    }
-    htmlLeft += `<h3 style="font-weight:bold;">ALL Section Cost: $${allSectionsCost.toFixed(2)}</h3>`;
-    htmlLeft += `<h3 style="font-weight:bold;">Hinge Drilling Cost: $${(resultData.hingeCost || 0).toFixed(2)}</h3>`;
-    htmlLeft += `<h3 style="font-weight:bold;">Refinishing Cost: $${(resultData.refinishingCost || 0).toFixed(2)}</h3>`;
-    htmlLeft += `<h3 style="font-weight:bold;">Measuring Cost: $${(resultData.measuringCost || 0).toFixed(2)}</h3>`;
-    htmlLeft += `<br><br>`;
+    // Build invoice-style layout.
+    let html = `
+      <div class="invoice" style="max-width:800px; margin:auto; border:1px solid #3CDBC0; padding:1em;">
+        <h1 style="text-align:center; font-size:2em; margin-bottom:0;">Official Estimate</h1>
+        <p style="text-align:center; font-size:0.9em;">Date: ${dateStr}</p>
+        <hr style="border-color:#3CDBC0;">
+        
+        <h2 style="font-size:1.4em; margin-bottom:0.5em;">Summary of Charges</h2>
+        <table style="width:100%; border-collapse:collapse;">
+          <tr>
+            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">ALL Section Cost</td>
+            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">$${allSectionsCost}</td>
+          </tr>
+          <tr>
+            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Hinge Drilling Cost</td>
+            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">$${(resultData.hingeCost || 0).toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Refinishing Cost</td>
+            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">$${(resultData.refinishingCost || 0).toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Measuring Cost</td>
+            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">$${(resultData.measuringCost || 0).toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Disposal Cost</td>
+            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">$${(resultData.disposalCost || 0).toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td style="padding:0.5em; font-weight:bold;">Overall Total</td>
+            <td style="padding:0.5em; text-align:right; font-weight:bold;">$${overall}</td>
+          </tr>
+        </table>
+        
+        <hr style="border-color:#3CDBC0;">
+        
+        <h2 style="font-size:1.4em; margin-bottom:0.5em;">Installation Details</h2>
+        <table style="width:100%; border-collapse:collapse;">
+          <tr>
+            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Total Doors</td>
+            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">${globalTotalDoors}</td>
+          </tr>
+          <tr>
+            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Total Drawers</td>
+            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">${globalTotalDrawers}</td>
+          </tr>
+          <tr>
+            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Hinge Count</td>
+            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">${resultData.hingeCount}</td>
+          </tr>
+          <tr>
+            <td style="padding:0.5em; border-bottom:1px solid #3CDBC0;">Cost To Installer</td>
+            <td style="padding:0.5em; text-align:right; border-bottom:1px solid #3CDBC0;">$${costToInstaller}</td>
+          </tr>
+          <tr>
+            <td style="padding:0.5em; font-weight:bold;">Profit Margin</td>
+            <td style="padding:0.5em; text-align:right; font-weight:bold;">$${profitMargin}</td>
+          </tr>
+        </table>
+      </div>
+    `;
     
-    // Right column: Installation Details block.
-    let htmlRight = `<h2 style="font-size:1.5em;">Installation Details</h2>`;
-    htmlRight += `<p><strong>Total Doors:</strong> ${globalTotalDoors}</p>`;
-    htmlRight += `<p><strong>Total Drawers:</strong> ${globalTotalDrawers}</p>`;
-    htmlRight += `<p><strong>Price per Drawer:</strong> $${document.querySelector('input[name="pricePerDrawer"]').value}</p>`;
-    htmlRight += `<p><strong>Door Install Cost:</strong> $${globalDoorInstallCost.toFixed(2)}</p>`;
-    htmlRight += `<p><strong>Drawer Install Cost:</strong> $${globalDrawerInstallCost.toFixed(2)}</p>`;
-    htmlRight += `<p><strong>Lazy Susan Install Cost:</strong> $${globalLazySusanInstallCost.toFixed(2)}</p>`;
-    htmlRight += `<p><strong>Total Sq Ft:</strong> ${globalTotalSqFt.toFixed(2)}</p>`;
-    htmlRight += `<p style="margin-top:20px;"><strong>Hinge Count:</strong> ${resultData.hingeCount}</p>`;
-    htmlRight += `<p><strong>Cost To Installer:</strong> $${costToInstaller.toFixed(2)}</p>`;
-    htmlRight += `<p><strong>Profit Margin:</strong> $${profitMargin.toFixed(2)}</p>`;
-    htmlRight += `<p><strong>Disposal Cost:</strong> $${resultData.disposalCost.toFixed(2)}</p>`;
+    // Set the final invoice-styled HTML to the results container.
+    document.getElementById('results').innerHTML = html;
     
-    let finalHtml = `<div class="results-container">`;
-    finalHtml += `<div class="results-left">${htmlLeft}</div>`;
-    finalHtml += `<div class="results-right" id="installationDetails">${htmlRight}</div>`;
-    finalHtml += `</div>`;
-    finalHtml += `<br><br>`;
-    finalHtml += `<button id="toggleInstallationBtn" style="margin-top: 1em; padding:0.5em 1em;">Hide Installation Details</button>`;
-    finalHtml += `<button id="toggleProfitBtn" style="margin-top: 1em; padding:0.5em 1em;">Show Profit Details</button>`;
-    finalHtml += `<button id="printEstimate" style="margin-top: 1em; padding:0.5em 1em;">Print Estimate</button>`;
-    
-    document.getElementById('results').innerHTML = finalHtml;
-    
-    // Toggle Installation Details.
-    document.getElementById('toggleInstallationBtn').addEventListener('click', () => {
-      const installDiv = document.getElementById('installationDetails');
-      const toggleBtn = document.getElementById('toggleInstallationBtn');
-      if (installDiv.style.display === 'none') {
-        installDiv.style.display = 'block';
-        toggleBtn.textContent = 'Hide Installation Details';
-      } else {
-        installDiv.style.display = 'none';
-        toggleBtn.textContent = 'Show Installation Details';
-      }
-    });
-    
-    // Toggle Profit Details button (if needed).
-    document.getElementById('toggleProfitBtn').addEventListener('click', () => {
-      alert("Profit Details are included in the Installation Details section.");
-    });
-    
-    // Print functionality.
+    // Attach print functionality.
     document.getElementById('printEstimate').addEventListener('click', () => {
       window.print();
     });
