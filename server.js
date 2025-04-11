@@ -16,6 +16,10 @@ app.use(express.json()); // Middleware to parse JSON request bodies
 // This line tells Express to serve files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
+// --- ADDED FOR DEBUGGING ---
+console.log("Attempting to load pricingData.json...");
+// --- END ADDED LINE ---
+
 let pricingData;
 try {
   // --- CRITICAL FOR VERCEL: Ensure 'pricingData.json' exists at the root ---
@@ -51,7 +55,9 @@ app.post('/calculate', (req, res) => {
     if (!payload || typeof payload !== 'object') {
         return res.status(400).json({ error: 'Invalid request body: Payload missing or not an object.' });
     }
+    console.log("Received /calculate POST request."); // Log when the handler is invoked
     const result = calculateOverallTotal(payload, pricingData);
+    console.log("Calculation successful, sending result."); // Log success before sending
     res.json(result);
   } catch (error) {
     // Log the detailed error on the server (visible in Vercel function logs)
