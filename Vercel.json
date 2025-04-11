@@ -22,7 +22,7 @@
       "dest": "/public/index.html"
     },
     {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico))$",
+      "src": "/(.*//.(js|css|png|jpg|jpeg|gif|svg|ico))$",
       "dest": "/public/$1"
     },
 
