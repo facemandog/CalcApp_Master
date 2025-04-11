@@ -1,8 +1,9 @@
-// --- DIAGNOSTIC api/index.js --- // Renamed File
+// --- DIAGNOSTIC api/index.js --- // Renamed File with XSS Fix
 // Purpose: Test Vercel routing and function invocation. Does NOT perform calculations.
 
 const express = require('express');
 const path = require('path');
+const escape = require('escape-html'); // <<< Added: Import the escape-html library
 const app = express();
 
 // Log ALL requests that reach this server function
@@ -31,11 +32,15 @@ app.get('/', (req, res) => {
 });
 
 // Catch-all for any other request reaching the server function (if not served by static)
-// This helps identify if requests are unexpectedly bypassing specific routes
+// --- XSS FIX APPLIED ---
 app.use((req, res) => {
-    console.log(`API DIAGNOSTIC: Reached CATCH-ALL handler in api/index.js for ${req.method} ${req.url}`);
-    res.status(404).send(`Server catch-all (api/index.js): Route ${req.method} ${req.url} not handled.`);
+    const escapedUrl = escape(req.url); // Escape the URL before echoing
+    const escapedMethod = escape(req.method); // Also escape method just in case
+    console.log(`API DIAGNOSTIC: Reached CATCH-ALL handler in api/index.js for ${escapedMethod} ${escapedUrl}`);
+    // Send the escaped values in the response
+    res.status(404).send(`Server catch-all (api/index.js): Route ${escapedMethod} ${escapedUrl} not handled.`);
 });
+// --- END XSS FIX ---
 
 
 // --- IMPORTANT: Export the Express app for Vercel ---
