@@ -1,4 +1,4 @@
-# nuCalc v3.4
+# nuDoors App Suite | nuEstimate
 
 A web-based cost estimation tool designed specifically for nuDoors projects, focusing on door and drawer replacement or refinishing services. It allows for detailed input of project dimensions, styles, features, and configurable pricing parameters to generate a professional estimate.
 
