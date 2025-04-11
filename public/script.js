@@ -501,8 +501,8 @@ document.addEventListener('DOMContentLoaded', () => {
                  <tr><td>Profit Margin:</td><td>${profitMargin}</td></tr>
                  ${calculateDisposalFlag ? `
                  <tr><td colspan="2" style="padding-top:1em; font-weight:bold; border-bottom: none;">Disposal Details (Calculated):</td></tr>
-                 <tr><td>   Doors for Disposal:</td><td>${doorsForDisposal}</td></tr>
-                 <tr><td>   Drawers for Disposal:</td><td>${drawersForDisposal}</td></tr>
+                 <tr><td>   Disposal | Doors:</td><td>${doorsForDisposal}</td></tr>
+                 <tr><td>   Disposal | Drawers:</td><td>${drawersForDisposal}</td></tr>
                  <tr><td>   Lazy Susans for Disposal:</td><td>${lazySusansForDisposal}</td></tr>
                  <tr><td>   Calculated Disposal Cost:</td><td>${disposalCost}</td></tr>
                  ` : `
