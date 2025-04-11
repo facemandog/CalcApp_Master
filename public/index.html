@@ -3,539 +3,375 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>nuDoor App Suite | nuEstimate</title>
+  <title>nuCalc V5 | Neumorphic Style</title>
+  <!-- Add Nunito Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-        --primary-color: #3CDBC0; /* Teal */
-        --background-color: black;
-        --text-color: white;
-        --section-bg-color: #333;
-        --input-bg-color: #3CDBC0; /* Teal */
-        --input-text-color: black;
-        --border-color: #3CDBC0; /* Teal */
-        --instruction-bg: #222;
-        --footer-text: #ccc;
-        --remove-btn-bg: #dc3545; /* Red */
-        --error-text-color: #f8d7da; /* Light red for errors */
-        --error-bg-color: #721c24; /* Dark red background for errors */
-        --collapsed-width: 220px; /* Width when Price Setup is collapsed */
-        /* NEW: Lighter grey for price setup */
-        --price-setup-bg-color: #4a4a4a;
+    /* Reset and Base Styles */
+    * {
+        border: 0;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
     }
+    :root {
+        --hue: 184; /* Base hue from example */
+        --bg-light: hsl(var(--hue),10%,90%);
+        --fg-light: hsl(var(--hue),66%,24%);
+        --primary-light: hsl(var(--hue),66%,44%);
+        --gradient-light: linear-gradient(145deg, hsl(var(--hue),10%,85%), hsl(var(--hue),10%,100%));
+        --shadow-light-inset: inset 0.2rem 0.2rem 0.5rem hsl(var(--hue),10%,75%), inset -0.2rem -0.2rem 0.5rem hsl(0,0%,100%);
+        --shadow-light-outset-concave: inset 0.4rem 0.4rem 0.8rem hsl(var(--hue),10%,75%), inset -0.4rem -0.4rem 0.8rem hsl(0,0%,100%);
+        --shadow-light-outset-convex: 0.5rem 0.5rem 1rem hsl(var(--hue),5%,65%), -0.5rem -0.5rem 1rem hsl(0,0%,100%);
+
+        --bg-dark: hsl(var(--hue),10%,15%); /* Darker base */
+        --fg-dark: hsl(var(--hue),10%,85%); /* Lighter text */
+        --primary-dark: hsl(var(--hue),66%,54%); /* Brighter primary */
+        --gradient-dark: linear-gradient(145deg, hsl(var(--hue),10%,18%), hsl(var(--hue),10%,25%));
+        --shadow-dark-inset: inset 0.2rem 0.2rem 0.5rem hsl(var(--hue),10%,10%), inset -0.2rem -0.2rem 0.5rem hsl(var(--hue),10%,30%);
+        --shadow-dark-outset-concave: inset 0.4rem 0.4rem 0.8rem hsl(var(--hue),10%,10%), inset -0.4rem -0.4rem 0.8rem hsl(var(--hue),10%,30%);
+        --shadow-dark-outset-convex: 0.5rem 0.5rem 1rem hsl(var(--hue),5%,8%), -0.5rem -0.5rem 1rem hsl(var(--hue),10%,30%);
+
+
+        /* Default Light Theme */
+        --bg: var(--bg-light);
+        --fg: var(--fg-light);
+        --primary: var(--primary-light);
+        --gradient: var(--gradient-light);
+        --shadow-inset: var(--shadow-light-inset);
+        --shadow-outset-concave: var(--shadow-light-outset-concave);
+        --shadow-outset-convex: var(--shadow-light-outset-convex);
+        --container-bg: var(--gradient-light);
+        --input-bg: var(--bg-light); /* Inputs match background */
+        --input-shadow: var(--shadow-light-inset);
+        --button-bg: var(--gradient-light);
+        --button-shadow: var(--shadow-light-outset-convex);
+        --button-shadow-active: var(--shadow-light-outset-concave);
+
+        --border-color: transparent; /* Remove borders */
+
+        font-size: 16px; /* Base font size */
+    }
+
+    /* Dark Theme Override */
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --bg: var(--bg-dark);
+            --fg: var(--fg-dark);
+            --primary: var(--primary-dark);
+            --gradient: var(--gradient-dark);
+            --shadow-inset: var(--shadow-dark-inset);
+            --shadow-outset-concave: var(--shadow-dark-outset-concave);
+            --shadow-outset-convex: var(--shadow-dark-outset-convex);
+            --container-bg: var(--gradient-dark);
+            --input-bg: var(--bg-dark);
+            --input-shadow: var(--shadow-dark-inset);
+            --button-bg: var(--gradient-dark);
+            --button-shadow: var(--shadow-dark-outset-convex);
+            --button-shadow-active: var(--shadow-dark-outset-concave);
+        }
+    }
+
+    body, button, input, select {
+      color: var(--fg);
+      font-family: "Nunito", sans-serif;
+      outline: transparent;
+      transition: all 0.2s ease-out;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     body {
-      background-color: var(--background-color);
-      color: var(--text-color);
-      font-family: Arial, sans-serif;
-      margin: 2em;
+      background: var(--bg);
+      min-height: 100vh;
+      padding: 2em;
       line-height: 1.6;
     }
+
+    /* Header */
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1em;
-      border-bottom: 2px solid var(--primary-color);
-      padding-bottom: 1em;
-      flex-wrap: wrap; /* Allow header items to wrap */
+      margin-bottom: 1.5em;
+      padding-bottom: 1.5em;
+      border-bottom: none; /* Removed border */
+      flex-wrap: wrap;
     }
     header h1 {
-      margin: 0 0 0.2em 0; /* Add bottom margin if wraps */
-      color: var(--primary-color);
+      margin: 0 0 0.2em 0;
+      color: var(--primary); /* Use primary color */
       font-size: 2em;
+      font-weight: 700;
     }
     header img {
-      height: 50px;
+      height: 40px;
     }
 
-    /* Button above instructions */
-    #toggleInstructionsContainer {
-        margin-bottom: 0.5em;
-        text-align: left; /* Or center/right */
-    }
-    #toggleInstructionsBtn {
-        padding: 0.5em 1em;
-        font-size: 0.9em;
-        /* Keep default button styles */
-    }
-
-    /* Directions styling - Hidden by default */
-    #instructions {
-      background-color: var(--instruction-bg);
-      padding: 1.5em;
-      border-radius: 4px;
-      margin-bottom: 1.5em;
-      border: 1px solid var(--border-color);
-      display: none; /* <<< HIDE BY DEFAULT */
-    }
-    #instructions strong {
-      font-weight: bold;
-      color: var(--primary-color);
-      display: block;
-      margin-bottom: 0.5em;
-      font-size: 1.1em;
-    }
-    #instructions ol {
-      margin-left: 1.5em;
-      padding-left: 0.5em; /* Adjust padding */
-    }
-    #instructions li {
-       margin-bottom: 0.5em;
-    }
-     #instructions a {
-        color: cyan;
-        text-decoration: none;
+    /* Instructions Toggle & Section */
+     #toggleInstructionsContainer { margin-bottom: 0.5em; }
+     #instructions {
+        display: none; /* Hidden by default */
+        background: var(--container-bg);
+        padding: 1.5em;
+        border-radius: 1.5em; /* Softer radius */
+        margin-bottom: 1.5em;
+        box-shadow: var(--shadow-outset-convex);
+        border: none;
      }
-     #instructions a:hover {
-        text-decoration: underline;
-     }
+      #instructions strong { color: var(--primary); font-weight: 700;}
+      #instructions ol { margin-left: 1.5em; padding-left: 0.5em; }
+      #instructions li { margin-bottom: 0.5em; }
+      #instructions a { color: var(--primary); text-decoration: none; }
+      #instructions a:hover { text-decoration: underline; }
 
-    /* Centered example image */
-    #exampleImage {
-      text-align: center;
-      margin-bottom: 1.5em;
-    }
+    /* Example Image */
+    #exampleImage { text-align: center; margin-bottom: 1.5em; }
     #exampleImage img {
-      max-width: 90%;
-      height: auto;
-      border: 2px solid var(--primary-color);
-      border-radius: 4px;
+        max-width: 90%;
+        height: auto;
+        border-radius: 1.5em; /* Match container radius */
+        border: none;
+        box-shadow: var(--shadow-outset-convex);
     }
 
-     /* New container for Price Setup and Other Parts */
-     #mainConfigRow {
-         display: flex;
-         flex-wrap: wrap; /* Allow wrapping on very small screens */
-         gap: 1.5em;
-         align-items: flex-start; /* Align tops */
-         margin-bottom: 1.5em;
-     }
+    /* Main Config Row (Price Setup + Other Parts) */
+    #mainConfigRow { display: flex; flex-wrap: wrap; gap: 1.5em; align-items: flex-start; margin-bottom: 1.5em; }
 
-    /* Price Setup Section (collapsible) */
+    /* General Container Style (.part, .section, #priceSetupContainer) */
+    .part, .section, #priceSetupContainer {
+        background: var(--container-bg);
+        border-radius: 1.5em; /* Softer corners */
+        padding: 1.5em;
+        box-shadow: var(--shadow-outset-convex);
+        border: none; /* Remove border */
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Price Setup Specifics */
     #priceSetupContainer {
-      /* background-color: var(--section-bg-color); <-- Overridden */
-      background-color: var(--price-setup-bg-color); /* <<< NEW Background Color */
-      border: 1px solid var(--border-color);
-      padding: 1.5em;
-      border-radius: 4px;
-      box-sizing: border-box;
       flex: 0 1 450px;
       min-width: var(--collapsed-width);
       height: auto;
       overflow: hidden;
-      transition: width 0.4s ease-in-out, padding 0.4s ease-in-out, min-width 0.4s ease-in-out;
+      transition: width 0.4s ease-in-out, padding 0.4s ease-in-out, min-width 0.4s ease-in-out, box-shadow 0.2s ease-out; /* Added shadow transition */
     }
-     #priceSetupContainer h2 {
-         display: flex;
-         justify-content: space-between;
-         align-items: center;
-         flex-wrap: wrap;
-         margin-bottom: 1em;
+     #priceSetupContainer.collapsed {
+         flex-basis: var(--collapsed-width);
+         width: var(--collapsed-width);
+         padding: 1.5em 1em 0.5em 1em; /* Adjusted padding for collapse */
+         min-width: var(--collapsed-width);
+         box-shadow: var(--shadow-outset-concave); /* Inset shadow when collapsed */
      }
-    #togglePriceSetupBtn {
-      padding: 0.4em 0.8em;
-      font-size: 0.8em;
-      margin-left: 1em;
-      margin-top: 0.5em;
-      flex-shrink: 0;
+      #priceSetupContainer.collapsed #priceSetupContent { display: none; opacity: 0; }
+      #priceSetupContainer.collapsed h2 { margin-bottom: 0.5em; }
+
+    #priceSetupContent { transition: opacity 0.2s linear 0.1s; opacity: 1; }
+    .price-setup-columns { display: flex; gap: 1.5em; flex-wrap: wrap; }
+    .price-setup-columns > div { flex: 1; min-width: 180px; }
+
+    /* Other Parts Container */
+    #otherPartsContainer { flex: 1 1 500px; display: flex; flex-wrap: wrap; gap: 1.5em; min-width: 250px; }
+    #otherPartsContainer .part { flex-basis: calc(50% - 0.75em); min-width: 240px; }
+
+    /* Rough Estimate Section Container */
+    #roughEstimateContainer { margin-bottom: 1em; } /* Reduced bottom margin */
+    #sectionsContainer { display: flex; flex-wrap: wrap; gap: 1em; margin-bottom: 1em; }
+    .section {
+        flex-grow: 0; flex-shrink: 1; flex-basis: 25vw;
+        min-width: 300px; max-width: 25vw;
     }
-    /* Price Setup inner content */
-    #priceSetupContent {
-      transition: opacity 0.2s linear 0.1s;
-      opacity: 1;
-    }
-    .price-setup-columns {
-        display: flex;
-        gap: 1.5em;
-        flex-wrap: wrap;
-    }
-     .price-setup-columns > div {
-        flex: 1;
-        min-width: 180px;
+     .section-header { display: flex; justify-content: center; align-items: center; margin-bottom: 1em; }
+     .section-id {
+        text-align: center; min-width: 85px; font-weight: 700; color: var(--primary);
+        font-size: 0.9em; background-color: rgba(0,0,0,0.2); /* Subtler background */
+        padding: 3px 6px; border-radius: 0.5em; white-space: nowrap;
+        vertical-align: middle; box-sizing: border-box;
+        box-shadow: var(--shadow-inset); /* Inset look for badge */
      }
+     #sectionsContainer .section > * { width: 100%; }
 
-    /* Collapsed state for Price Setup */
-    #priceSetupContainer.collapsed {
-        flex-basis: var(--collapsed-width);
-        width: var(--collapsed-width);
-        padding-left: 1em;
-        padding-right: 1em;
-        padding-bottom: 0;
-        min-width: var(--collapsed-width);
-    }
-    #priceSetupContainer.collapsed #priceSetupContent {
-        display: none;
-        opacity: 0;
-        transition: opacity 0.1s linear;
-    }
-     #priceSetupContainer.collapsed h2 {
-        margin-bottom: 0.5em;
-     }
-
-
-    /* Container for the other parts (Piece Count, etc.) */
-    #otherPartsContainer {
-        flex: 1 1 500px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1.5em;
-        min-width: 250px;
-    }
-
-
-    /* Form elements */
+    /* General Form Elements */
     h2 {
-      color: var(--primary-color);
-      font-size: 1.3em;
-      margin-bottom: 0.8em;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 0.3em;
+        color: var(--primary); /* Use primary color */
+        font-size: 1.3em;
+        margin-bottom: 1em; /* Increased margin */
+        border-bottom: none; /* Remove border */
+        padding-bottom: 0;
+        font-weight: 700;
     }
     label {
-      display: block;
-	  font-weight: bold;
-      margin-bottom: 0.8em;
-       font-size: 0.95em;
+        display: block;
+        margin-bottom: 1em; /* Increased margin */
+        font-size: 0.95em;
+        color: var(--fg); /* Ensure label text uses theme color */
+        font-weight: 400; /* Standard weight */
     }
-    /* General Input Styles */
+
+    /* Input & Select Styling - Inset Neumorphic */
     input[type="number"], select {
-      background-color: var(--input-bg-color);
-      border: 1px solid var(--border-color);
-      padding: 0.8em;
-      border-radius: 3px;
-      color: var(--input-text-color);
-      width: 100%;
-      box-sizing: border-box;
-      margin-top: 0.3em;
-      font-size: 1em;
+        background: var(--input-bg);
+        border-radius: 0.8em; /* Softer radius */
+        padding: 0.8em 1em; /* Adjust padding */
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 0.4em;
+        font-size: 1em;
+        color: var(--fg); /* Use theme text color */
+        box-shadow: var(--input-shadow); /* Apply inset shadow */
+        border: none; /* Remove default border */
+        appearance: none; /* Remove default system appearance */
+        -webkit-appearance: none;
     }
-    /* Style number input arrows */
-    input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button {
-       opacity: 0.3;
-    }
-
-    /* --- Specific Styles for Inputs inside Price Setup --- */
-    #priceSetupContainer input[type="number"],
-    #priceSetupContainer select {
-      background-color: white; /* Override background */
-      color: black;           /* Ensure text is black */
-      border: 1px solid #777; /* Add subtle border */
-    }
-    /* Optional: Hover style for price setup inputs */
-    #priceSetupContainer input[type="number"]:hover,
-    #priceSetupContainer select:hover {
-       background-color: #f0f0f0;
-       border-color: #555;
-    }
-    /* Ensure Labels/Small Text remain white/readable in Price Setup */
-    #priceSetupContainer label,
-    #priceSetupContainer small {
-        color: var(--text-color); /* Keep using main text color */
-    }
-    /* --- End Price Setup Specific Styles --- */
+    /* Optional: Add focus style */
+     input[type="number"]:focus, select:focus {
+         box-shadow: var(--input-shadow), 0 0 0 2px var(--primary); /* Add primary ring on focus */
+     }
+    /* Style dropdown arrow (basic) */
+     select {
+        background-image: linear-gradient(45deg, transparent 50%, var(--fg) 50%), linear-gradient(135deg, var(--fg) 50%, transparent 50%);
+        background-position: calc(100% - 20px) calc(1em + 2px), calc(100% - 15px) calc(1em + 2px);
+        background-size: 5px 5px, 5px 5px;
+        background-repeat: no-repeat;
+     }
 
 
+    /* Button Styling - Outset Neumorphic */
     button {
-       background-color: var(--primary-color);
-       border: none;
+       background: var(--button-bg);
+       box-shadow: var(--button-shadow);
        padding: 0.8em 1.2em;
-       border-radius: 3px;
-       color: var(--input-text-color);
+       border-radius: 1em; /* Match container radius */
+       color: var(--fg);
        cursor: pointer;
-       font-weight: bold;
-       transition: background-color 0.2s ease, opacity 0.2s ease;
-       margin: 0;
+       font-weight: 700; /* Bolder buttons */
+       transition: all 0.15s linear; /* Faster transition */
        font-size: 1em;
+       display: inline-flex; /* Align icon/text nicely if needed */
+       justify-content: center;
+       align-items: center;
+       gap: 0.5em;
     }
     button:hover {
-      opacity: 0.9;
-      background-color: #2CAAA0;
+       opacity: 1; /* Use shadow change for hover */
+       color: var(--primary); /* Highlight text on hover */
     }
+    button:active {
+       box-shadow: var(--button-shadow-active); /* Inset shadow */
+       transform: scale(0.98); /* Press effect */
+       color: var(--primary);
+    }
+    button:focus {
+         box-shadow: var(--button-shadow), 0 0 0 2px var(--primary); /* Outline on focus */
+    }
+
+    /* Specific Button Adjustments */
+    #addSectionBtn { margin-top: 1em; margin-bottom: 1.5em; display: inline-block; width: auto; }
+    #formActions { margin-top: 1.5em; display: flex; gap: 1em; flex-wrap: wrap; }
+    #calculateBtn { padding: 0.8em 2em; font-size: 1.1em; flex-grow: 1; } /* Allow calculate to grow */
+    #clearAllBtn {
+        background: hsl(var(--hue), 10%, 50%); /* Grey background */
+        box-shadow: 0.3rem 0.3rem 0.6rem hsl(var(--hue), 10%, 30%), -0.3rem -0.3rem 0.6rem hsl(var(--hue), 10%, 70%);
+        color: hsl(var(--hue), 10%, 95%);
+        padding: 0.8em 1.5em;
+        font-size: 1.1em;
+        flex-grow: 1; /* Allow clear to grow */
+    }
+     #clearAllBtn:active {
+        box-shadow: inset 0.3rem 0.3rem 0.6rem hsl(var(--hue), 10%, 30%), inset -0.3rem -0.3rem 0.6rem hsl(var(--hue), 10%, 70%);
+     }
+     /* Remove Button */
      button.remove-button {
-        background-color: var(--remove-btn-bg);
+        background: var(--remove-btn-bg);
+        box-shadow: 0.2rem 0.2rem 0.4rem hsl(3, 50%, 30%), -0.2rem -0.2rem 0.4rem hsl(3, 90%, 70%);
         color: white;
         padding: 0.4em 0.8em;
         font-size: 0.8em;
-        margin-top: 0.5em;
-        margin-left: auto;
+        margin-top: auto; /* Push to bottom */
+        margin-left: auto; /* Push to right */
+        align-self: flex-end; /* Ensure stays right */
         display: block;
         width: fit-content;
+        border-radius: 0.8em;
      }
-     button.remove-button:hover {
-        opacity: 0.8;
-        background-color: #c82333;
-     }
-
-    .flex-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.5em;
-      margin-bottom: 1.5em;
-    }
-
-    /* Sections and Parts layout */
-    .part {
-      background-color: var(--section-bg-color);
-      border: 1px solid var(--border-color);
-      padding: 1.5em;
-      border-radius: 4px;
-      flex: 1;
-      min-width: 220px;
-      box-sizing: border-box;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .section {
-      background-color: var(--section-bg-color);
-      border: 1px solid var(--border-color);
-      padding: 1.5em;
-      border-radius: 4px;
-      flex-grow: 0;
-      flex-shrink: 1;
-      flex-basis: 25vw;
-      min-width: 300px;
-      max-width: 25vw;
-      box-sizing: border-box;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-    }
-    .section-header {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-bottom: 1em;
-    }
-    .section-id {
-      text-align: center;
-      min-width: 85px;
-      font-weight: bold;
-      color: var(--primary-color);
-      font-size: 0.9em;
-      background-color: rgba(0,0,0,0.5);
-      padding: 3px 5px;
-      border-radius: 3px;
-      white-space: nowrap;
-      vertical-align: middle;
-      box-sizing: border-box;
-    }
-
-
-     .section > label,
-     .section > .dimension-inputs {
-        margin-bottom: 0.8em;
-     }
-     .section > .remove-button {
-        margin-top: auto;
-        align-self: flex-end;
-     }
-
-
-    #roughEstimateContainer h2 {
-        margin-bottom: 1em;
-    }
-    #sectionsContainer {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1em;
-      margin-bottom: 1em;
-    }
-     #sectionsContainer .section > * {
-        width: 100%;
-     }
-
-     #otherPartsContainer .part {
-         flex-basis: calc(50% - 0.75em);
-         min-width: 240px;
-     }
-
-    #addSectionBtn {
-       margin-top: 1em;
-       margin-bottom: 1.5em;
-       display: inline-block;
-    }
-
-     .dimension-inputs {
-        display: flex;
-        gap: 1em;
-     }
-      .dimension-inputs label {
-         flex: 1;
-         margin-bottom: 0;
+      button.remove-button:active {
+         box-shadow: inset 0.2rem 0.2rem 0.4rem hsl(3, 50%, 30%), inset -0.2rem -0.2rem 0.4rem hsl(3, 90%, 70%);
       }
-
-    #formActions {
-        margin-top: 1.5em;
-    }
-    #calculateBtn {
-      padding: 0.8em 2em;
-      font-size: 1.1em;
-      margin-right: 1em;
-      margin-bottom: 0.5em;
-    }
-    #clearAllBtn {
-      background-color: #6c757d;
-      color: white;
-      padding: 0.8em 1.5em;
-      font-size: 1.1em;
-      margin-bottom: 0.5em;
-    }
-     #clearAllBtn:hover {
-       background-color: #5a6268;
-     }
-
-    /* Results display */
-    #results {
-      margin-top: 2em;
-      background-color: var(--instruction-bg);
-      color: var(--text-color);
-      padding: 1em;
-      border-radius: 4px;
-      border: 1px solid var(--border-color);
-      overflow-x: auto;
-    }
-    .invoice-error {
-        padding: 1em;
-        background-color: var(--error-bg-color);
-        color: var(--error-text-color);
-        border: 1px solid var(--error-text-color);
-        border-radius: 4px;
-        margin: 1em;
-    }
-    .invoice-error p {
-        margin: 0.2em 0;
-    }
-
-    /* Invoice Styles */
-    .invoice {
-        max-width: 50%;
-        min-width: 300px;
-        margin: 1em auto;
-        padding: 2em;
-        border: 1px solid var(--border-color);
-        background-color: var(--section-bg-color);
-        border-radius: 4px;
-        color: var(--text-color);
-    }
-    .invoice-header {
-        text-align: center;
-        margin-bottom: 1.5em;
-        padding-bottom: 1em;
-        border-bottom: 1px solid var(--border-color);
-    }
-    .invoice-header h1 {
-        color: var(--primary-color);
-        margin-bottom: 0.2em;
-        font-size: 1.8em;
-    }
-     .invoice-header p {
-        font-size: 0.9em;
-        color: #ccc;
-     }
-    .invoice hr.invoice-hr {
-        border: none;
-        border-top: 1px dashed var(--border-color);
-        margin: 1.5em 0;
-    }
-     .invoice h2 {
-         font-size: 1.3em;
-         color: var(--primary-color);
-         margin-bottom: 1em;
-         border-bottom: none;
-     }
-     .summary-table, .details-table {
-         width: 100%;
-         border-collapse: collapse;
-         margin-bottom: 1em;
-     }
-      .summary-table td, .details-table td {
-          padding: 0.8em 0.5em;
-          border-bottom: 1px solid #444;
-          vertical-align: top;
-          word-break: break-word;
-      }
-       .summary-table .table-label, .details-table td:first-child {
-          text-align: left;
-          padding-right: 1em;
-          color: #ddd;
-       }
-        .summary-table .table-value, .details-table td:last-child {
-           text-align: right;
-           font-weight: bold;
-           color: var(--text-color);
-        }
-         .summary-table tfoot td {
-            border-bottom: none;
-            padding-top: 1em;
-         }
-         .summary-table .total-row td {
-             font-size: 1.2em;
-             font-weight: bold;
-             color: var(--primary-color);
-             border-top: 2px solid var(--border-color);
-             padding-top: 1em;
-         }
-
-     /* Details Section */
-     .details-section {
-         margin-top: 1.5em;
-         padding: 1em;
-         background-color: #2a2a2a;
-         border-radius: 4px;
-         border: 1px dashed #555;
-     }
-      .details-section h3 {
-         font-size: 1.1em;
-         color: var(--primary-color);
-         margin-bottom: 0.8em;
-      }
-      .details-table td {
-          padding: 0.5em;
-          font-size: 0.9em;
-      }
-      .toggle-details-btn {
-         margin: 1em 0 0.5em 0;
-         padding: 0.6em 1em;
+     /* Toggle Buttons */
+      #togglePriceSetupBtn, #toggleInstructionsBtn, #toggleDetailsBtn {
          font-size: 0.9em;
-         background-color: #555;
-         color: white;
+         font-weight: 400; /* Less emphasis */
+         padding: 0.6em 1em;
+         width: auto; /* Don't force full width */
+         background: var(--bg); /* Match background */
+         box-shadow: var(--shadow-inset); /* Inset look */
+         border-radius: 0.8em;
+         color: var(--fg);
       }
-       .toggle-details-btn:hover {
-          background-color: #666;
+      #togglePriceSetupBtn:active, #toggleInstructionsBtn:active, #toggleDetailsBtn:active {
+          box-shadow: none; /* Flatten on click */
+          background: linear-gradient(145deg, hsl(var(--hue),10%,85%), hsl(var(--hue),10%,100%)); /* Simulate press */
+          color: var(--primary);
+          transform: scale(0.98);
+      }
+       /* Dark mode toggles */
+       @media(prefers-color-scheme: dark) {
+           #togglePriceSetupBtn:active, #toggleInstructionsBtn:active, #toggleDetailsBtn:active {
+               background: linear-gradient(145deg, hsl(var(--hue),10%,18%), hsl(var(--hue),10%,25%));
+           }
        }
 
-     .estimate-footer {
-         text-align: center;
-         margin-top: 2em;
-         font-size: 0.85em;
-         color: var(--footer-text);
+    /* Results & Invoice */
+    #results { margin-top: 2em; background: transparent; border: none; padding: 0; overflow-x: visible; }
+    .invoice {
+        max-width: 60%; /* Adjusted for neumorphic padding */
+        min-width: 320px;
+        margin: 2em auto;
+        padding: 2em;
+        border-radius: 1.5em;
+        background: var(--container-bg);
+        box-shadow: var(--shadow-outset-convex);
+        color: var(--fg);
+        border: none;
+    }
+    .invoice-header { text-align: center; margin-bottom: 1.5em; padding-bottom: 1.5em; border-bottom: 1px solid hsla(var(--hue), 10%, 50%, 0.3); }
+    .invoice-header h1 { color: var(--primary); margin-bottom: 0.2em; font-size: 1.8em; font-weight: 700; }
+    .invoice-header p { font-size: 0.9em; color: var(--fg); opacity: 0.8; }
+    .invoice hr.invoice-hr { display: none; } /* Remove HR */
+    .invoice h2 { font-size: 1.3em; color: var(--primary); margin-bottom: 1em; border-bottom: none; font-weight: 700; text-align: center; }
+    /* Table styling */
+    .summary-table, .details-table { width: 100%; border-collapse: separate; border-spacing: 0 0.5em; margin-bottom: 1.5em; } /* Add spacing */
+    .summary-table td, .details-table td { padding: 0.8em 1em; border-bottom: none; vertical-align: middle; } /* Remove bottom border */
+    .summary-table tr, .details-table tr { background: var(--gradient); border-radius: 0.8em; box-shadow: var(--shadow-inset); } /* Style rows */
+    .summary-table .table-label, .details-table td:first-child { text-align: left; padding-right: 1em; color: var(--fg); opacity: 0.9; }
+    .summary-table .table-value, .details-table td:last-child { text-align: right; font-weight: 700; color: var(--fg); }
+    .summary-table tfoot { border-top: 1px solid hsla(var(--hue), 10%, 50%, 0.3); margin-top: 1em; } /* Separator line */
+    .summary-table tfoot td { border-bottom: none; padding-top: 1em; }
+    .summary-table .total-row td { font-size: 1.2em; font-weight: 700; color: var(--primary); padding-top: 1em; background: none; box-shadow: none; }
+    /* Details Section */
+    .details-section { margin-top: 1.5em; padding: 1.5em; background: var(--bg); border-radius: 1em; box-shadow: var(--shadow-inset); border: none; }
+    .details-section h3 { font-size: 1.1em; color: var(--primary); margin-bottom: 1em; text-align: center; font-weight: 700;}
+    .details-table td { padding: 0.5em 0.8em; font-size: 0.9em; }
+    .details-table tr { border-radius: 0.6em; } /* Slightly smaller radius */
+
+    .estimate-footer { text-align: center; margin-top: 2em; font-size: 0.85em; color: var(--fg); opacity: 0.7; }
+
+    /* Print Button */
+    #printButtonContainer { margin-top: 1.5em; text-align: center; display: none; }
+    #printEstimate { padding: 0.8em 1.5em; font-size: 1.1em; width: auto; } /* Don't force full width */
+
+    /* Small text */
+    small { display: block; font-size: 0.8em; color: var(--fg); opacity: 0.8; margin-top: 0.4em; margin-left: 0; line-height: 1.3; }
+    /* Price setup small text slightly different */
+     #priceSetupContainer small {
+         font-size: 0.75em;
+         opacity: 0.7;
      }
 
-    /* Print Button Container */
-    #printButtonContainer {
-        margin-top: 1.5em;
-        text-align: center;
-        display: none;
-    }
-     #printEstimate {
-       padding: 0.8em 1.5em;
-       font-size: 1.1em;
-     }
-
-
-    /* Small text styling */
-    small {
-      display: block;
-      font-size: 0.70em;
-      color: #ccc;
-      margin-top: 0.4em;
-      margin-left: 0.2em;
-      line-height: 1.3;
-    }
-
-    /* RESPONSIVE STYLES */
+    /* Responsive */
     @media (max-width: 1024px) { /* Larger Tablets */
         body { margin: 1.5em; }
         #mainConfigRow { gap: 1em; }
@@ -543,53 +379,67 @@
         #otherPartsContainer { flex: 1 1 400px; }
         #otherPartsContainer .part { flex-basis: calc(50% - 0.75em); min-width: 240px; }
         .section { flex-grow: 0; flex-shrink: 1; flex-basis: 25vw; min-width: 280px; max-width: 25vw; }
-        .invoice { padding: 1.5em; }
+        .invoice { padding: 1.5em; max-width: 70%; }
     }
     @media (max-width: 768px) { /* Portrait Tablets */
         body { margin: 1em; font-size: 15px; }
-        header { padding-bottom: 0.8em; }
         header h1 { font-size: 1.8em; }
-        header img { height: 45px; }
-        #instructions { padding: 1em; }
         #mainConfigRow { flex-direction: column; align-items: stretch; gap: 1em; }
         #priceSetupContainer { flex-basis: auto; width: 100%; }
         #priceSetupContainer.collapsed { width: var(--collapsed-width); flex-basis: var(--collapsed-width); }
         #otherPartsContainer { flex-basis: auto; width: 100%; }
         #otherPartsContainer .part { flex-basis: calc(50% - 0.5em); min-width: 220px; }
         .section { flex-grow: 0; flex-shrink: 1; flex-basis: calc(50% - 0.5em); min-width: 260px; max-width: none; } /* Revert to 50% basis */
-        input[type="number"], select, button { padding: 0.9em; font-size: 1em; }
+        input[type="number"], select, button { padding: 1em; font-size: 1em; } /* Larger touch targets */
         button { width: 100%; box-sizing: border-box; }
-        #addSectionBtn, #togglePriceSetupBtn, #toggleInstructionsBtn { width: auto; display: inline-block; }
-        button.remove-button { width: fit-content; padding: 0.5em 1em; align-self: flex-end; }
+        #addSectionBtn, #togglePriceSetupBtn, #toggleInstructionsBtn, button.remove-button, #printEstimate { width: auto; display: inline-block; } /* Keep some buttons inline */
+        button.remove-button { align-self: flex-end; padding: 0.5em 1em; }
         #formActions { display: flex; flex-direction: column; gap: 0.8em; margin-top: 1em; }
         #calculateBtn, #clearAllBtn { margin-right: 0; width: 100%; }
         .invoice { padding: 1.5em; max-width: 90%; }
         .invoice-header h1 { font-size: 1.6em; }
-        .summary-table td, .details-table td { padding: 0.6em 0.3em; }
-        .summary-table .total-row td { font-size: 1.1em; }
     }
     @media (max-width: 600px) { /* Phones */
          #sectionsContainer .section { flex-basis: 100%; max-width: none; min-width: 0; margin-bottom: 1em; }
          #otherPartsContainer .part { flex-basis: 100%; min-width: 0; margin-bottom: 1em; }
          .invoice { padding: 1em; max-width: 95%; }
+         .price-setup-columns { flex-direction: column; gap: 0.5em; } /* Stack price cols */
     }
+
     /* Print Styles */
 	@media print {
+        :root { /* Force light theme variables for print */
+            --bg: var(--bg-light);
+            --fg: var(--fg-light);
+            --primary: var(--primary-light);
+            --gradient: var(--gradient-light);
+            --shadow-inset: none;
+            --shadow-outset-concave: none;
+            --shadow-outset-convex: none;
+            --container-bg: white;
+            --input-bg: white;
+            --input-shadow: none;
+            --button-bg: white;
+            --button-shadow: none;
+            --button-shadow-active: none;
+        }
         body { background-color: white; color: black; margin: 1em; font-size: 10pt; }
-        header, #instructions, #exampleImage, form, #printButtonContainer, .toggle-details-btn, #toggleInstructionsContainer { display: none !important; }
+        header, #instructions, #exampleImage, form, #printButtonContainer, .toggle-details-btn, #toggleInstructionsContainer, button.remove-button { display: none !important; }
         #internalDetails:not(.print-section) { display: none !important; }
-        #internalDetails.print-section { display: block !important; background-color: #f8f8f8 !important; border: 1px solid #ccc !important; margin-top: 1.5em !important; padding: 1em !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        #internalDetails.print-section .details-table td { color: black !important; border-bottom: 1px solid #eee !important; }
+        #internalDetails.print-section { display: block !important; background-color: #f8f8f8 !important; border: 1px solid #ccc !important; margin-top: 1.5em !important; padding: 1em !important; color: black !important; box-shadow: none !important; }
+        #internalDetails.print-section .details-table td { color: black !important; border-bottom: 1px solid #eee !important; background: none !important; box-shadow: none !important;}
         #internalDetails.print-section h3 { color: black !important; }
         #results { margin-top: 0; border: none; padding: 0; background-color: white; color: black; }
-        .invoice { border: 1px solid #ccc; box-shadow: none; padding: 1em; max-width: 100% !important; background-color: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .invoice-header { border-bottom: 1px solid #ccc; text-align: center; } /* Center header content */
+        .invoice { border: 1px solid #ccc; box-shadow: none !important; padding: 1em; max-width: 100% !important; background: white !important; color: black !important; }
+        .invoice-header { border-bottom: 1px solid #ccc; text-align: center; }
         .invoice-header h1, .invoice-header p { color: black !important; text-align: center; }
-        .invoice hr.invoice-hr { border-top: 1px dashed #aaa; }
-        .summary-table td, .details-table td { border-bottom: 1px solid #eee; color: black !important; }
+        .invoice h2 { color: black !important; }
+        .summary-table tr, .details-table tr { background: none !important; box-shadow: none !important;}
+        .summary-table td, .details-table td { border-bottom: 1px solid #eee !important; color: black !important; }
         .summary-table .table-label, .details-table td:first-child { color: #333 !important; }
         .summary-table .total-row td { color: black !important; border-top: 2px solid #aaa; }
         .estimate-footer { color: #555 !important; }
+        #priceSetupContainer, .part, .section { background: none !important; box-shadow: none !important; border: 1px solid #ccc !important; } /* Give printed containers basic border */
 	}
 
   </style>
@@ -597,16 +447,14 @@
 <body>
   <header>
 	<img src="assets/logo.png" alt="Logo">
-    <h1>App Suite | nuEstimate<h1> <!-- Updated Name & Version -->
+    <h1>App Suite | nuEstimate<h1>
   </header>
 
-   <!-- NEW Toggle Button for Instructions -->
    <div id="toggleInstructionsContainer">
        <button type="button" id="toggleInstructionsBtn">Show Directions</button>
    </div>
-
-  <!-- Directions Section (Now hidden by default via CSS) -->
   <div id="instructions">
+    <!-- Instructions Content -->
     <strong>Directions:</strong>
     <ol>
       <li>Measure the Height and Width of each section and enter these dimensions along with the Style and desired finish into "Section Calculator | By Square Foot". Use the "+ Add Section" button for multiple areas.</li>
@@ -616,147 +464,93 @@
       <li>Press "Calculate Estimate" to generate the estimate below.</li>
       <li>The results section includes a button to show/hide "Internal Details" (incl. disposal breakdown). If this section is visible when you print, it will be included in the printout.</li>
 	  <li>Tip: Follow our playlists for everything from installation
-	  guidance to our ordering guide at <a href="https://www.youtube.com/channel/UCdQs9VpOpEIrTe24JZ9oYSg" target="_blank" rel="noopener noreferrer" style="color: cyan;">The nuDoors Official Channel under "Playlists"</a></li>
+	  guidance to our ordering guide at <a href="https://youtube.com/nudoors" target="_blank" rel="noopener noreferrer">The nuDoors Official Channel</a></li>
     </ol>
   </div>
 
-  <!-- Centered Example Image -->
   <div id="exampleImage">
     <img src="assets/example-breakdown.png" alt="Example Breakdown">
   </div>
 
   <form id="calcForm">
-    <!-- Part 1: Rough Estimate (Dynamic Sections) -->
+    <!-- Rough Estimate -->
     <div id="roughEstimateContainer">
       <h2>Section Calculator | By Square Foot</h2>
-      <div id="sectionsContainer" class="flex-row">
-        <!-- Dynamic sections will be appended here -->
-      </div>
+      <div id="sectionsContainer" class="flex-row"></div>
       <button type="button" id="addSectionBtn">+ Add Section</button>
     </div>
 
-    <!-- Wrapper for Price Setup and Other Parts -->
+    <!-- Main Config Row -->
     <div id="mainConfigRow">
-
-        <!-- Price Setup Section -->
+        <!-- Price Setup -->
         <div id="priceSetupContainer">
           <h2>
             <span>Piece & Install Pricing</span>
-			<br>
             <button type="button" id="togglePriceSetupBtn">Hide</button>
           </h2>
 		  <small>Enter your desired charge per piece & Sq Ft.</small>
-			<small>All prices will be saved on your device for later use. Click "Hide" To collapse this section. </small>
+          <small>All prices saved locally. Click "Hide" To collapse.</small>
 		  <br>
           <div id="priceSetupContent">
             <div class="price-setup-columns">
-              <!-- Left Column -->
-              <div>
-                <label>
-                  Door Install Charge:
-                  <input type="number" name="pricePerDoor" value="10" step="0.1" required />
-                </label>
+              <div> <!-- Left Col -->
+                <label> Door Install Charge: <input type="number" name="pricePerDoor" value="10" step="0.1" required /> </label>
                 <small>Suggested MSRP: $10 / door</small>
-                <label>
-                  Drawer Install Price:
-                  <input type="number" name="pricePerDrawer" value="10" step="0.1" required />
-                </label>
+                <label> Drawer Install Price: <input type="number" name="pricePerDrawer" value="10" step="0.1" required /> </label>
                 <small>Suggested MSRP: $10 / drawer</small>
-                <label>
-                  Refinishing Cost | SqFt:
-                  <input type="number" name="refinishingCostPerSqFt" value="40" step="0.1" required />
-                </label>
+                <label> Refinishing Cost per Sq Ft: <input type="number" name="refinishingCostPerSqFt" value="40" step="0.1" required /> </label>
                 <small>Suggested MSRP: $40 / sq ft</small>
               </div>
-              <!-- Right Column -->
-              <div>
-                <label>
-                  Lazy Susan Install Price:
-                  <input type="number" name="pricePerLazySusan" value="20" step="0.1" required />
-                </label>
+              <div> <!-- Right Col -->
+                <label> Lazy Susan Install Price: <input type="number" name="pricePerLazySusan" value="20" step="0.1" required /> </label>
                 <small>Suggested MSRP: $20 / Lazy Susan</small>
-                <label>
-                  On Site Measuring Fee:
-                  <input type="number" name="onSiteMeasuring" value="200" step="0.1" required />
-                </label>
+                <label> On Site Measuring Fee: <input type="number" name="onSiteMeasuring" value="200" step="0.1" required /> </label>
                 <small>Suggested MSRP: $200</small>
-                <label>
-                  Disposal Cost - per Door:
-                  <input type="number" name="doorDisposalCost" value="5" step="0.1" required />
-                </label>
+                <label> Disposal Cost - per Door: <input type="number" name="doorDisposalCost" value="5" step="0.1" required /> </label>
+                <small>Used if Disposal Required is 'Yes'. (LS=2, Dr=1)</small>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Other Parts Container -->
+        <!-- Other Parts -->
         <div id="otherPartsContainer">
           <div class="part" id="hingeDrilling">
             <h2>Piece Count</h2>
-			<small>Enter the amount of each item in all sections. Be careful to count the doors within the correct noted ranges (IE. 0-36" in Height)</small>
+			<small>Enter the amount of each item. Count doors per height range.</small>
 			<br>
-            <label>
-              Number of Drawers:
-              <input type="number" name="numDrawers" value="0" min="0" />
-            </label>
-			<label>
-              Number of Lazy Susans:
-              <input type="number" name="lazySusanQty" value="0" min="0" />
-            </label>
-            <label>
-              Doors 0" - 36" (Height):
-              <input type="number" name="doors_0_36" value="0" min="0" />
-            </label>
-            <label>
-              Doors 36.01" - 60" (Height):
-              <input type="number" name="doors_36_60" value="0" min="0" />
-            </label>
-            <label>
-              Doors 60.01" - 82" (Height):
-              <input type="number" name="doors_60_82" value="0" min="0" />
-            </label>
+            <label> Number of Drawers: <input type="number" name="numDrawers" value="0" min="0" /> </label>
+            <label> Doors 0" - 36" (H): <input type="number" name="doors_0_36" value="0" min="0" /> </label>
+            <label> Doors 36.01" - 60" (H): <input type="number" name="doors_36_60" value="0" min="0" /> </label>
+            <label> Doors 60.01" - 82" (H): <input type="number" name="doors_60_82" value="0" min="0" /> </label>
+            <label> Number of Lazy Susans: <input type="number" name="lazySusanQty" value="0" min="0" /> </label>
           </div>
 
           <div class="part" id="specialFeatures">
             <h2>Special Features</h2>
-			<small>Enter the amount of custom colors requested and indicate if disposal is needed.</small>
+			<small>Enter custom paint count & select if disposal needed.</small>
 			<br>
-            <label>
-              Custom Paint Choices (Quantity):
-              <input type="number" name="customPaintQty" value="0" min="0" />
-            </label>
-            <small>Adds $200 per custom color to the total charge.</small>
-
-            <!-- DISPOSAL DROPDOWN MOVED HERE -->
-            <label style="margin-top: 1.5em;">
-              Disposal Required?
+            <label> Custom Paint Qty: <input type="number" name="customPaintQty" value="0" min="0" /> </label>
+            <small>Adds $200 per custom color.</small>
+            <label style="margin-top: 1.5em;"> Disposal Required?
               <select name="calculateDisposal">
                 <option value="no" selected>No</option>
                 <option value="yes">Yes</option>
               </select>
             </label>
-            <small>If Yes, cost is based on Piece Count & Disposal Rate in Pricing section.</small>
-            <!-- END MOVED DROPDOWN -->
+            <small>If Yes, cost based on Piece Count & Rate.</small>
           </div>
+        </div>
+    </div>
 
-        </div> <!-- End otherPartsContainer -->
-
-    </div> <!-- End mainConfigRow -->
-
-
-    <!-- Calculate and Clear All Buttons -->
+    <!-- Actions -->
     <div id="formActions">
         <button type="submit" id="calculateBtn">Calculate Estimate</button>
         <button type="button" id="clearAllBtn">Clear All Fields</button>
     </div>
   </form>
 
-  <!-- Results Section -->
-  <div id="results">
-      <!-- Estimate will be displayed here -->
-  </div>
-
-  <!-- Print Button Container -->
+  <div id="results"></div>
   <div id="printButtonContainer">
       <button type="button" id="printEstimate">Print Estimate</button>
   </div>
