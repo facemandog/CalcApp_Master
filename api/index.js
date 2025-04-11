@@ -3,7 +3,7 @@
 
 const express = require('express');
 const path = require('path');
-const escape = require('escape-html'); // <<< Added: Import the escape-html library
+const escape = require('escape-html'); // <<< Requires escape-html dependency
 const app = express();
 
 // Log ALL requests that reach this server function
