@@ -8,11 +8,11 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "escape-html": "^1.0.3",
     "express": "^4.19.2"
+    // "escape-html" dependency removed
   },
   "engines": {
-    "node": "22.x"
+    "node": "22.x" // Keeping Node 22.x as requested
   },
   "author": "Dan (Your Name/Company)",
   "license": "UNLICENSED"

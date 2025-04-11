@@ -1,51 +1,90 @@
-// --- DIAGNOSTIC api/index.js --- // Renamed File with XSS Fix
-// Purpose: Test Vercel routing and function invocation. Does NOT perform calculations.
+// --- START OF FILE api/index.js --- // FINAL VERSION
 
 const express = require('express');
+const fs = require('fs');
 const path = require('path');
-const escape = require('escape-html'); // <<< Requires escape-html dependency
+// --- PATH CORRECTION: Go up one level to find calculation.js ---
+const { calculateOverallTotal } = require('../calculation.js');
+
 const app = express();
+// PORT is mainly for local development; Vercel assigns its own port dynamically
+const PORT = process.env.PORT || 3000; // Keep for local running consistency
 
-// Log ALL requests that reach this server function
-app.use((req, res, next) => {
-  // Log requests hitting the Node function specifically
-  console.log(`API DIAGNOSTIC: Received request in api/index.js: ${req.method} ${req.url}`);
-  next(); // Continue to next middleware/route
-});
+app.use(express.json()); // Middleware to parse JSON request bodies
 
-// Static files (Keep this to serve index.html, script.js etc.)
-// --- PATH CORRECTION: Go up one level from 'api' folder to find 'public' ---
+// --- PATH CORRECTION: Go up one level to find public directory ---
+// Serve static files from the 'public' directory at the project root
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
-// Simple /calculate route for testing invocation
+console.log("Attempting to load pricingData.json..."); // Keep this log for startup debugging
+let pricingData;
+try {
+  // --- PATH CORRECTION: Go up one level to find pricingData.json ---
+  const pricingPath = path.join(__dirname, '..', 'pricingData.json');
+  if (fs.existsSync(pricingPath)) {
+      pricingData = JSON.parse(fs.readFileSync(pricingPath));
+      console.log("Successfully loaded pricingData.json");
+  } else {
+      console.error("CRITICAL ERROR: pricingData.json not found at path:", pricingPath);
+      console.error("Ensure pricingData.json is in the root directory and committed.");
+      pricingData = {}; // Assign empty object to allow server start, but calculations will fail
+  }
+} catch (error) {
+    console.error("CRITICAL ERROR reading or parsing pricingData.json:", error);
+    console.error("Ensure pricingData.json is valid JSON.");
+    pricingData = {}; // Fallback
+}
+
+
+// The actual calculation route
 app.post('/calculate', (req, res) => {
-  console.log(`API DIAGNOSTIC: Reached POST /calculate handler in api/index.js.`);
-  // Send a simple success response for testing
-  res.status(200).json({ message: "Calculate route hit successfully!" });
+  console.log("Received POST /calculate request in api/index.js"); // Log invocation
+  // Check if pricingData loaded correctly before attempting calculation
+  if (!pricingData || Object.keys(pricingData).length === 0) {
+     console.error("Calculation error: pricingData was not loaded correctly during server startup.");
+     return res.status(500).json({ error: 'Server configuration error: Pricing data missing or invalid.' });
+  }
+  try {
+    const payload = req.body;
+    if (!payload || typeof payload !== 'object') {
+        console.error("Invalid request body received:", payload);
+        return res.status(400).json({ error: 'Invalid request body: Payload missing or not an object.' });
+    }
+    console.log("Calling calculateOverallTotal...");
+    const result = calculateOverallTotal(payload, pricingData);
+    console.log("Calculation successful, sending result.");
+    res.json(result);
+  } catch (error) {
+    // Log the detailed error on the server (visible in Vercel function logs)
+    console.error('Calculation endpoint error:', error.message);
+    console.error(error.stack); // Log stack trace for more details
+    // Send a generic error message to the client
+    res.status(500).json({ error: 'Internal server error during calculation.' });
+  }
 });
 
-// Basic root handler (this might not be hit if index.html is served by static first)
-app.get('/', (req, res) => {
-  console.log(`API DIAGNOSTIC: Reached GET / handler in api/index.js (likely served by static first).`);
-  // You won't see this response if public/index.html exists and is served by the static middleware
-  res.status(200).send('Hello from GET / handler in api/index.js');
-});
-
-// Catch-all for any other request reaching the server function (if not served by static)
-// --- XSS FIX APPLIED ---
+// Catch-all for any other request reaching the server function
+// This helps identify if requests are unexpectedly bypassing specific routes
+// You might want to remove this or have it serve index.html for SPA-like behavior
+// depending on whether other server routes are expected. For now, keep simple 404.
 app.use((req, res) => {
-    const escapedUrl = escape(req.url); // Escape the URL before echoing
-    const escapedMethod = escape(req.method); // Also escape method just in case
-    console.log(`API DIAGNOSTIC: Reached CATCH-ALL handler in api/index.js for ${escapedMethod} ${escapedUrl}`);
-    // Send the escaped values in the response
-    res.status(404).send(`Server catch-all (api/index.js): Route ${escapedMethod} ${escapedUrl} not handled.`);
+    // Don't escape here unless needed, keep it simple for now
+    console.log(`Reached server catch-all in api/index.js for ${req.method} ${req.url}`);
+    res.status(404).send(`Server catch-all (api/index.js): Route ${req.method} ${req.url} not handled.`);
 });
-// --- END XSS FIX ---
 
+
+// --- IMPORTANT: Conditional Listening for LOCAL development ---
+// Vercel environment usually sets NODE_ENV to 'production'
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    // Use 0.0.0.0 to listen on all available network interfaces locally if needed
+    // console.log(`Server running locally on http://localhost:${PORT} or http://<your-local-ip>:${PORT}`);
+    console.log(`Server running locally on http://localhost:${PORT}`);
+  });
+}
 
 // --- IMPORTANT: Export the Express app for Vercel ---
 module.exports = app;
 
-// NOTE: Removed pricingData loading, calculation logic, and conditional app.listen
-//       for this specific diagnostic test. Remember to revert after testing!
-// --- END DIAGNOSTIC api/index.js ---
+// --- END OF FILE api/index.js --- // FINAL VERSION
