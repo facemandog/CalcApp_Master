@@ -1,4 +1,3 @@
-// This is the vercel.json we suspect is active
 {
   "version": 2,
   "builds": [
@@ -6,17 +5,28 @@
     { "src": "public/**/*", "use": "@vercel/static" }
   ],
   "routes": [
-    // API route first
+    // API route (MUST be first or clearly distinct)
     {
       "src": "/calculate",
-      "methods": ["POST"], // <<< Check: Is this correctly matching?
-      "dest": "server.js"  // <<< Check: Is this pointing correctly?
+      "methods": ["POST"],
+      "dest": "server.js"
     },
     // Serve index.html specifically for the root path
-    { "src": "/", "dest": "/public/index.html" },
-    // Serve other static files
-    { "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico))$", "dest": "/public/$1" },
-    // Fallback to server
-    { "src": "/(.*)", "dest": "server.js" } // <<< This might be interfering or unnecessary
+    {
+      "src": "/",
+      "dest": "/public/index.html"
+    },
+    // Serve other static files (js, css, assets)
+    // Make sure this pattern is correct and doesn't accidentally match /calculate
+    {
+      "src": "/((?!calculate)[^/]*\\.(js|css|png|jpg|jpeg|gif|svg|ico))$", // Match static extensions BUT NOT /calculate
+      "dest": "/public/$1"
+    },
+    // Serve index.html for any other non-file path (common for SPAs, might help)
+    {
+        "src": "/(.*)",
+        "dest": "/public/index.html"
+    }
+    // REMOVED the original "/(.*)" -> "server.js" fallback
   ]
 }
