@@ -1,3 +1,5 @@
+// --- START OF FILE script.js ---
+
 // script.js
 
 // Define door and drawer style arrays.
@@ -35,6 +37,7 @@ function createRoughEstimateSection(index) {
     sectionDiv.className = 'section';
     sectionDiv.dataset.index = index;
 
+    // Add a header div and place the section-id inside it
     sectionDiv.innerHTML = `
       <div class="section-header">
          <span class="section-id">Section ${index + 1}</span>
@@ -321,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Reset Instructions Toggle
     if (instructionsDiv && toggleInstructionsBtn) {
-        instructionsDiv.style.display = 'none';
+        instructionsDiv.style.display = 'none'; // Start hidden
         toggleInstructionsBtn.textContent = 'Show Directions';
     }
 
@@ -333,16 +336,16 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 
-  // On form submit, build the payload and send it.
+  // --- REVISED FETCH LOGIC in Submit Handler ---
   calcForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    updateTotals();
+    updateTotals(); // Ensure counts are current
 
+    // Build Payload
     const sections = [];
     document.querySelectorAll('#sectionsContainer .section').forEach(sec => {
         sections.push(getSectionData(sec));
     });
-
     const formData = new FormData(e.target);
     const payload = {
       sections: sections,
@@ -356,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       part3: {
         customPaintQty: parseInt(formData.get('customPaintQty')) || 0,
-        calculateDisposal: formData.get('calculateDisposal') || 'no'
+        calculateDisposal: formData.get('calculateDisposal') || 'no' // Get disposal setting
       },
       priceSetup: {
         pricePerDoor: parseFloat(formData.get('pricePerDoor')) || 0,
@@ -369,49 +372,80 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
-    // console.log("Sending Payload:", JSON.stringify(payload, null, 2)); // Debugging: Log payload
+    resultsDiv.innerHTML = '<p>Calculating...</p>';
+    printBtnContainer.style.display = 'none';
 
     try {
-      resultsDiv.textContent = 'Calculating...';
       const response = await fetch('/calculate', {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify(payload)
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
 
-      // Log raw response status for debugging
-      // console.log("Response Status:", response.status, response.statusText);
+      // --- START: Corrected Body Reading Logic ---
+      let responseData;
+      let responseBodyText = ''; // Store text version in case JSON fails
+      try {
+        // Clone the response to allow reading body twice if needed (once as text, once as json)
+        const clonedResponse = response.clone();
+        responseBodyText = await clonedResponse.text(); // Read as text first for fallback
 
-      if (!response.ok) {
-          let errorMsg = `HTTP error! status: ${response.status}`;
-          try {
-              const errorData = await response.json(); // Try to get JSON error
-              if (errorData && errorData.error) errorMsg += ` - ${errorData.error}`;
-              else errorMsg += ` - Server error details unavailable.`;
-          }
-          catch (e) {
-              // If response is not JSON (e.g., plain text error)
-              const textError = await response.text();
-              errorMsg += ` - Server response: ${textError || 'No response body'}`;
-           }
-        throw new Error(errorMsg);
+        // Attempt to parse original response as JSON
+        responseData = await response.json();
+
+      } catch (jsonError) {
+        console.warn("Could not parse response as JSON:", jsonError);
+        // Use the text body we already read if JSON parsing failed
+        responseData = { error: `Invalid JSON response from server (Status: ${response.status} ${response.statusText}). Body: ${responseBodyText}` };
+
+        // If the original status was actually ok, but body wasn't JSON, treat it as an error
+        if (response.ok) {
+             const formatError = new Error(responseData.error);
+             formatError.status = response.status;
+             throw formatError;
+        }
       }
 
-      const resultData = await response.json();
-      // console.log("Received Result:", resultData); // Debugging: Log result
-      displayResults(resultData);
+      // NOW, check the response status
+      if (!response.ok) {
+        const status = response.status;
+        // Use the error from parsed JSON if available, otherwise use the text or default HTTP message
+        const errorMessage = responseData?.error || responseBodyText || `HTTP error! Status: ${status} ${response.statusText}`;
+        const error = new Error(errorMessage);
+        error.status = status;
+        throw error; // Throw the error to be caught below
+      }
+      // --- END: Corrected Body Reading Logic ---
+
+      // If we reached here, response.ok was true AND we successfully got JSON data
+      displayResults(responseData);
       printBtnContainer.style.display = 'block';
 
     } catch (err) {
-      resultsDiv.innerHTML = `<div class="invoice-error"><p><strong>Error Calculating Estimate:</strong></p><p>${err.message}</p></div>`;
+      // Catch block with specific 404 check
+      console.error("Calculation Fetch/Process Error:", err); // Log the full error object
+
+      let displayErrorMessage = err.message || 'An unknown error occurred.';
+
+      if (err.status === 404) {
+        displayErrorMessage = `Error: Calculation endpoint not found (404). Check server routing/deployment. (${err.message})`;
+        console.error('Specific Error Detail: Resource Not Found (404)');
+      } else if (err.status) {
+         displayErrorMessage = `Error: Server returned status ${err.status}. (${err.message})`;
+         console.error(`Specific Error Detail: HTTP Status ${err.status}`);
+      } else {
+          console.error("Specific Error Detail: Network error or CORS issue likely.");
+      }
+
+      resultsDiv.innerHTML = `<div class="invoice-error"><p><strong>Error Calculating Estimate:</strong></p><p>${escape(displayErrorMessage)}</p></div>`;
       printBtnContainer.style.display = 'none';
-      console.error("Calculation Fetch/Process Error:", err); // Log more specific error location
     }
   });
+  // --- END REVISED FETCH LOGIC ---
 
-  // Display results in a professional invoice style.
+
+  // --- Keep displayResults function ---
   function displayResults(resultData) {
-    // Add extra check for resultData itself
     if (!resultData || typeof resultData !== 'object') {
         console.error("Invalid resultData received:", resultData);
         resultsDiv.innerHTML = `<div class="invoice-error"><p><strong>Error:</strong></p><p>Received invalid response format from server.</p></div>`;
@@ -419,7 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     if (resultData.error) {
-        resultsDiv.innerHTML = `<div class="invoice-error"><p><strong>Error from Server:</strong></p><p>${resultData.error}</p></div>`;
+        resultsDiv.innerHTML = `<div class="invoice-error"><p><strong>Error from Server:</strong></p><p>${escape(resultData.error)}</p></div>`; // Escape server error
         printBtnContainer.style.display = 'none';
         return;
     }
@@ -427,14 +461,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const today = new Date();
     const dateStr = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    // Provide fallbacks for potentially missing nested objects
     const specialFeatures = resultData.specialFeatures || {};
     const installation = resultData.installation || {};
     const part2 = resultData.part2 || {};
-    const part3 = resultData.part3 || {};
-    const priceSetup = resultData.priceSetup || {};
+    const part3 = resultData.part3 || {}; // Use part3 from result if available
 
-    // Main Summary Values
     const overallTotal = formatCurrency(resultData.overallTotal);
     const allSectionsCost = formatCurrency(resultData.doorCostTotal);
     const hingeCost = formatCurrency(resultData.hingeCost);
@@ -447,7 +478,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalInstallCost = formatCurrency(installation.totalInstall);
     const lazySusanSurchargeVal = (part2.lazySusanQty || 0) * 50;
 
-    // Internal Details Values
     const costToInstaller = formatCurrency(resultData.costToInstaller);
     const profitMargin = formatCurrency(resultData.profitMargin);
     const actualTotalDoors = part2.totalDoors ?? 0;
@@ -456,13 +486,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalDrawers = part2.numDrawers ?? 0;
     const hingeCount = resultData.hingeCount ?? 'N/A';
     const doorsForDisposal = resultData.doorsForDisposal ?? 0;
-    const drawersForDisposal = resultData.drawersForDisposal ?? 0;
+    const drawersForDisposal = resultData.drawersForDisposal ?? 0; // Added for display
     const lazySusansForDisposal = resultData.lazySusansForDisposal ?? 0;
-    const calculateDisposalFlag = part3.calculateDisposal === 'yes';
+    const calculateDisposalFlag = resultData.priceSetup?.calculateDisposal === 'yes' || part3?.calculateDisposal === 'yes'; // Check both places
+
 
     let html = `
       <div class="invoice">
         <div class="invoice-header">
+          <img src="assets/logo.png" alt="nuDoors Logo" class="invoice-logo">
           <h1>Project Estimate</h1>
           <p>Date: ${dateStr}</p>
         </div>
@@ -528,14 +560,13 @@ document.addEventListener('DOMContentLoaded', () => {
     printBtnContainer.style.display = 'block';
   }
 
-  // Attach print functionality.
+  // --- Keep print logic and conditional print logic ---
    const printEstimateBtn = document.getElementById('printEstimate');
    if (printEstimateBtn) {
        printEstimateBtn.addEventListener('click', () => window.print());
    }
 
-   // Conditional Printing Logic.
-    window.onbeforeprint = () => {
+   window.onbeforeprint = () => {
         const resultsDivActive = document.getElementById('results');
         const internalDetailsDiv = resultsDivActive ? resultsDivActive.querySelector('#internalDetails') : null;
         if (internalDetailsDiv && internalDetailsDiv.style.display !== 'none') {
@@ -552,5 +583,13 @@ document.addEventListener('DOMContentLoaded', () => {
             internalDetailsDiv.classList.remove('print-section');
         }
     };
+
+  /** Helper function to escape HTML (simple version) */
+  function escape(str) {
+    if (!str) return '';
+    const map = { '&': '&', '<': '<', '>': '>', '"': '"', "'": ''' };
+    return str.replace(/[&<>"']/g, function (m) { return map[m]; });
+  }
+
 
 }); // End DOMContentLoaded
