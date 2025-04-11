@@ -9,10 +9,9 @@
   },
   "dependencies": {
     "express": "^4.19.2"
-    // "escape-html" dependency removed
   },
   "engines": {
-    "node": "22.x" // Keeping Node 22.x as requested
+    "node": "22.x"
   },
   "author": "Dan (Your Name/Company)",
   "license": "UNLICENSED"
