@@ -1,19 +1,18 @@
 {
   "name": "nudoors-estimator",
   "version": "1.0.0",
-  "description": "Web application for calculating nuDoors estimates.", // <--- Check quotes here
+  "description": "Web application for calculating nuDoors estimates.",
   "main": "api/index.js",
   "scripts": {
     "start": "node api/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "escape-html": "^1.0.3", // Added dependency // <--- Check quotes/comma here
     "express": "^4.19.2"
-  }, // <--- Check for extra comma here if escape-html was last
-  "engines": {
-    "node": "22.x" // Updated Node version // <--- Check quotes here
   },
-  "author": "Dan (Your Name/Company)", // <--- Check quotes here
-  "license": "UNLICENSED" // <--- Check quotes here
-} // <--- Check for extra comma before this brace
+  "engines": {
+    "node": "22.x"
+  },
+  "author": "Dan (Your Name/Company)",
+  "license": "UNLICENSED"
+}
