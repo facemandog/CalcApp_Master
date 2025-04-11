@@ -2,14 +2,36 @@
   "version": 2,
   "builds": [
     {
+      "src": "server.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "public/**/*",
       "use": "@vercel/static"
     }
   ],
   "routes": [
+    // API route first
     {
-      "src": "/(.*)",
+      "src": "/calculate",
+      "methods": ["POST"],
+      "dest": "server.js"
+    },
+    // Serve index.html specifically for the root path
+    {
+      "src": "/",
+      "dest": "/public/index.html"
+    },
+    // Serve other static files (like script.js, assets)
+    {
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico))$", // Match common static file extensions
       "dest": "/public/$1"
+    },
+    // Fallback to server for any other routes (might not be needed, but safer)
+    // If you ONLY have / and /calculate and static files, you might comment this out
+    {
+        "src": "/(.*)",
+        "dest": "server.js"
     }
   ]
 }
