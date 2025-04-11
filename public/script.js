@@ -1,9 +1,9 @@
 // --- START OF FILE script.js ---
-// (Corrected Selectors, Logic, and re-verified syntax)
 
-console.log("script.js: File loading..."); // Log file start
+// script.js
 
 // Define door and drawer style arrays.
+// --- RESTORED ARRAY DEFINITIONS ---
 const doorStyles = [
   "Shaker", "Slab", "Chamfer", "Savannah", "Beaded", "Stepped", "Ruth", "Maisie",
   "Mavis", "Dorothy", "Raised Panel", "Split Shaker", "Jean", "Nora", "Amelia",
@@ -12,6 +12,7 @@ const doorStyles = [
 const drawerStyles = doorStyles.filter(style =>
   !["Glass", "Georgia", "Split Shaker", "Winona", "Bessie", "Nora"].includes(style)
 );
+// --- END RESTORATION ---
 
 // Global variables
 let globalTotalSqFt = 0;
@@ -20,32 +21,20 @@ let globalTotalDrawers = 0;
 
 /** Retrieves data from a dynamic Rough Estimate section. */
 function getSectionData(sectionDiv) {
-    // Ensure sectionDiv exists before querying
-    if (!sectionDiv) {
-        console.error("getSectionData called with invalid sectionDiv");
-        return {}; // Return empty object or handle error appropriately
-    }
-    try {
-        return {
-            doorStyle: sectionDiv.querySelector('select[name="sectionDoorStyle"]')?.value || '', // Use optional chaining and default value
-            drawerStyle: sectionDiv.querySelector('select[name="sectionDrawerStyle"]')?.value || '',
-            finish: sectionDiv.querySelector('select[name="sectionFinish"]')?.value || '',
-            height: parseFloat(sectionDiv.querySelector('input[name="sectionHeight"]')?.value) || 0,
-            width: parseFloat(sectionDiv.querySelector('input[name="sectionWidth"]')?.value) || 0
-        };
-    } catch (error) {
-        console.error("Error in getSectionData for section:", sectionDiv, error);
-        return {}; // Return empty on error
-    }
-}
-
+    return {
+        doorStyle: sectionDiv.querySelector('select[name="sectionDoorStyle"]').value,
+        drawerStyle: sectionDiv.querySelector('select[name="sectionDrawerStyle"]').value,
+        finish: sectionDiv.querySelector('select[name="sectionFinish"]').value,
+        height: parseFloat(sectionDiv.querySelector('input[name="sectionHeight"]').value) || 0,
+        width: parseFloat(sectionDiv.querySelector('input[name="sectionWidth"]').value) || 0
+      };
+ }
 
 // Forward declaration
 let updateTotals;
 
 /** Creates a dynamic Rough Estimate section. */
 function createRoughEstimateSection(index) {
-    console.log(`Creating section ${index + 1}`); // Log section creation
     const sectionDiv = document.createElement('div');
     sectionDiv.className = 'section';
     sectionDiv.dataset.index = index;
@@ -91,7 +80,7 @@ function createRoughEstimateSection(index) {
           <input type="number" name="sectionWidth" value="12" step="0.1" required />
         </label>
       </div>
-    `; // Removed button adding from innerHTML
+    `;
 
     if (index > 0) {
       const removeBtn = document.createElement('button');
@@ -105,15 +94,14 @@ function createRoughEstimateSection(index) {
           updateTotals();
         }
       });
-      sectionDiv.appendChild(removeBtn); // Append button separately
+      sectionDiv.appendChild(removeBtn);
     }
 
-    // Add event listeners to new section's inputs/selects
     sectionDiv.querySelectorAll('input, select').forEach(input => {
       input.addEventListener('change', () => {
            if (typeof updateTotals === 'function') updateTotals();
       });
-      input.addEventListener('input', () => { // Catch number input changes
+      input.addEventListener('input', () => {
            if (typeof updateTotals === 'function') updateTotals();
       });
     });
@@ -136,62 +124,49 @@ function updateSectionIndices() {
 /** Loads pricing settings from localStorage. */
 function loadPricingSettings() {
     const pricingFields = [
-      { name: 'pricePerDoor', container: '#priceSetupContainer' },
-      { name: 'pricePerDrawer', container: '#priceSetupContainer' },
-      { name: 'refinishingCostPerSqFt', container: '#priceSetupContainer' },
-      { name: 'pricePerLazySusan', container: '#priceSetupContainer' },
-      { name: 'onSiteMeasuring', container: '#priceSetupContainer' },
-      { name: 'doorDisposalCost', container: '#priceSetupContainer' },
-      { name: 'calculateDisposal', container: '#priceSetupContainer' } // Dropdown is in price setup
+      'pricePerDoor', 'pricePerDrawer', 'refinishingCostPerSqFt',
+      'pricePerLazySusan', 'onSiteMeasuring', 'doorDisposalCost',
+      'calculateDisposal' // Include the dropdown state
     ];
-
-    pricingFields.forEach(field => {
-      const input = document.querySelector(`${field.container} [name="${field.name}"]`);
+    pricingFields.forEach(fieldName => {
+      const input = document.querySelector(`[name="${fieldName}"]`);
       if (input) {
-          const savedValue = localStorage.getItem(field.name);
-          if (savedValue !== null && savedValue !== "") {
-              input.value = savedValue;
-          } else {
-              const defaultValue = input.tagName === 'SELECT' ? input.querySelector('option[selected]')?.value : input.getAttribute('value');
-              if (defaultValue !== null && defaultValue !== undefined) {
-                  input.value = defaultValue;
-              } else if(input.tagName === 'SELECT') {
-                  input.value = 'no';
-              }
+        const savedValue = localStorage.getItem(fieldName);
+        if (savedValue !== null && savedValue !== "") {
+          input.value = savedValue;
+        } else {
+          // Use default value from HTML if nothing saved
+          const defaultValue = input.tagName === 'SELECT' ? input.querySelector('option[selected]')?.value : input.getAttribute('value');
+          if (defaultValue !== null && defaultValue !== undefined) {
+              input.value = defaultValue;
+              // Don't save default back to local storage here, let user interaction do it
+          } else if(input.tagName === 'SELECT') {
+              input.value = 'no'; // Default for dropdown if no selected attr
           }
-      } else {
-           // console.warn(`Load Settings: Input for [name="${field.name}"] not found in ${field.container}`);
+        }
       }
     });
-    saveCurrentPriceSetupValues();
-}
-
+    saveCurrentPriceSetupValues(); // Save initial state after loading
+  }
 
 /** Saves a pricing field's value to localStorage. */
 function savePricingSetting(e) {
-    if (e.target.name) {
+    if (e.target.name) { // Ensure the target has a name
       localStorage.setItem(e.target.name, e.target.value);
-      saveCurrentPriceSetupValues();
+      saveCurrentPriceSetupValues(); // Update the saved object
     }
 }
 
 /** Helper function to save the current state of price setup inputs. */
 function saveCurrentPriceSetupValues() {
     const priceSetupValues = {};
-    // Query inputs/selects ONLY within price setup container
     document.querySelectorAll('#priceSetupContainer input, #priceSetupContainer select').forEach(input => {
         if (input.name) {
             priceSetupValues[input.name] = input.value;
         }
     });
-    // Add special features inputs separately (now only customPaintQty)
-     const customPaintInput = document.querySelector('#specialFeatures input[name="customPaintQty"]');
-     if(customPaintInput) {
-         priceSetupValues['customPaintQty'] = customPaintInput.value;
-     }
     localStorage.setItem('priceSetupValues', JSON.stringify(priceSetupValues));
 }
-
 
 /** Helper function to format currency. */
 function formatCurrency(value) {
@@ -202,365 +177,260 @@ function formatCurrency(value) {
     return number.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 }
 
-console.log("script.js: Defining DOMContentLoaded listener..."); // Log before listener
+/** Helper function to escape HTML (simple version) */
+function escapeHTML(str) {
+    if (!str) return '';
+    return str.replace(/[&<>"']/g, function (match) {
+      return {
+        '&': '&',
+        '<': '<',
+        '>': '>',
+        '"': '"',
+        "'": ''' // Use HTML entity for single quote
+      }[match];
+    });
+}
 
-// --- Main Execution ---
+
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("script.js: DOMContentLoaded event fired."); // Initial Debug Log
-
-    // Get references to essential elements
-    const sectionsContainer = document.getElementById('sectionsContainer');
-    const addSectionBtn = document.getElementById('addSectionBtn');
-    const calcForm = document.getElementById('calcForm');
-    const priceSetupContainer = document.getElementById('priceSetupContainer');
-    const togglePriceSetupBtn = document.getElementById('togglePriceSetupBtn');
-    const clearAllBtn = document.getElementById('clearAllBtn');
-    const resultsDiv = document.getElementById('results');
-    const printBtnContainer = document.getElementById('printButtonContainer');
-    const instructionsDiv = document.getElementById('instructions');
-    const toggleInstructionsBtn = document.getElementById('toggleInstructionsBtn');
-
-    // Check if essential elements were found
-    if (!sectionsContainer || !addSectionBtn || !calcForm || !priceSetupContainer || !togglePriceSetupBtn || !clearAllBtn || !resultsDiv || !printBtnContainer) {
-        console.error("CRITICAL ERROR: One or more essential HTML elements not found. Check IDs in index.html.");
-        document.body.innerHTML = '<h1 style="color: red;">Error: Application UI failed to initialize. Please check console.</h1>';
-        return; // Stop further execution
-    }
-    console.log("Essential elements references obtained.");
+  const sectionsContainer = document.getElementById('sectionsContainer');
+  const addSectionBtn = document.getElementById('addSectionBtn');
+  const calcForm = document.getElementById('calcForm');
+  const priceSetupContainer = document.getElementById('priceSetupContainer');
+  const togglePriceSetupBtn = document.getElementById('togglePriceSetupBtn');
+  const clearAllBtn = document.getElementById('clearAllBtn');
+  const resultsDiv = document.getElementById('results');
+  const printBtnContainer = document.getElementById('printButtonContainer');
 
   /** Function to update global totals (only counts needed for payload). */
   updateTotals = function() {
         const sections = document.querySelectorAll('#sectionsContainer .section');
         let totalSqFt = 0;
         sections.forEach(sec => {
-          const height = parseFloat(sec.querySelector('input[name="sectionHeight"]')?.value) || 0; // Added optional chaining
-          const width = parseFloat(sec.querySelector('input[name="sectionWidth"]')?.value) || 0; // Added optional chaining
+          const height = parseFloat(sec.querySelector('input[name="sectionHeight"]').value) || 0;
+          const width = parseFloat(sec.querySelector('input[name="sectionWidth"]').value) || 0;
           totalSqFt += (height * width) / 144;
         });
         globalTotalSqFt = totalSqFt;
 
-        // Use optional chaining for safety, although these elements should exist
-        const doors0 = parseInt(document.querySelector('input[name="doors_0_36"]')?.value) || 0;
-        const doors36 = parseInt(document.querySelector('input[name="doors_36_60"]')?.value) || 0;
-        const doors60 = parseInt(document.querySelector('input[name="doors_60_82"]')?.value) || 0;
-        globalTotalDoors = doors0 + doors36 + doors60;
+        // Calculate ACTUAL doors from input fields
+        const doors0 = parseInt(document.querySelector('input[name="doors_0_36"]').value) || 0;
+        const doors36 = parseInt(document.querySelector('input[name="doors_36_60"]').value) || 0;
+        const doors60 = parseInt(document.querySelector('input[name="doors_60_82"]').value) || 0;
+        globalTotalDoors = doors0 + doors36 + doors60; // Store actual door count
 
-        globalTotalDrawers = parseInt(document.querySelector('input[name="numDrawers"]')?.value) || 0;
-        // console.log("Totals updated:", { globalTotalSqFt, globalTotalDoors, globalTotalDrawers }); // Optional debug
+        globalTotalDrawers = parseInt(document.querySelector('input[name="numDrawers"]').value) || 0;
   };
-  console.log("updateTotals function defined.");
 
   // Load pricing settings.
-  try {
-      console.log("Loading pricing settings...");
-      loadPricingSettings();
-      console.log("Pricing settings loaded.");
-  } catch (error) {
-      console.error("Error during loadPricingSettings:", error);
-  }
-
+  loadPricingSettings();
 
   // Attach listeners to pricing input fields & select
-  try {
-      console.log("Attaching listeners to Price Setup/Special Features inputs...");
-      // Select inputs/selects within specific containers
-      document.querySelectorAll('#priceSetupContainer input, #priceSetupContainer select, #specialFeatures select').forEach(input => { // Include specialFeatures select if needed
-        input.addEventListener('change', savePricingSetting);
-        if (input.type === 'number') input.addEventListener('input', savePricingSetting);
-      });
-      console.log("Price Setup/Special Features listeners attached.");
-  } catch (error) {
-      console.error("Error attaching listeners to Price Setup/Special Features inputs:", error);
-  }
+  document.querySelectorAll('#priceSetupContainer input, #priceSetupContainer select').forEach(input => {
+    input.addEventListener('change', savePricingSetting);
+    if (input.type === 'number') input.addEventListener('input', savePricingSetting);
+  });
 
 
   // Price Setup Toggle Logic.
-  if (togglePriceSetupBtn && priceSetupContainer) {
-      togglePriceSetupBtn.addEventListener('click', () => {
-        const isCollapsed = priceSetupContainer.classList.contains('collapsed');
-        if (isCollapsed) {
-            priceSetupContainer.classList.remove('collapsed');
-            togglePriceSetupBtn.textContent = 'Hide';
-        } else {
-            priceSetupContainer.classList.add('collapsed');
-            togglePriceSetupBtn.textContent = 'Show';
-        }
-      });
-      console.log("Price Setup toggle listener attached.");
-  } else {
-      console.error("Price Setup toggle button or container not found for listener.");
-  }
-
-
-  // Toggle Instructions Logic
-  if (toggleInstructionsBtn && instructionsDiv) {
-      toggleInstructionsBtn.addEventListener('click', () => {
-          const isHidden = instructionsDiv.style.display === 'none';
-          if (isHidden) {
-              instructionsDiv.style.display = 'block';
-              toggleInstructionsBtn.textContent = 'Hide Directions';
-          } else {
-              instructionsDiv.style.display = 'none';
-              toggleInstructionsBtn.textContent = 'Show Directions';
-          }
-      });
-      console.log("Instructions toggle listener attached.");
-  } else {
-      // Log if button specifically is missing, div might be intentional
-      if (!toggleInstructionsBtn) console.warn("Instructions toggle button (#toggleInstructionsBtn) not found.");
-      // console.warn("Instructions div (#instructions) not found."); // Less critical maybe
-  }
+  togglePriceSetupBtn.addEventListener('click', () => {
+    const isCollapsed = priceSetupContainer.classList.contains('collapsed');
+    if (isCollapsed) {
+        priceSetupContainer.classList.remove('collapsed');
+        togglePriceSetupBtn.textContent = 'Hide'; // Match HTML
+    } else {
+        priceSetupContainer.classList.add('collapsed');
+        togglePriceSetupBtn.textContent = 'Show'; // Match HTML (assuming it toggles)
+    }
+  });
 
   // Initialize sections.
   function initializeSections() {
-        console.log("Initializing sections...");
-        // Ensure sectionsContainer exists before modifying
-        if (!sectionsContainer) {
-            console.error("Cannot initialize sections, container not found.");
-            return;
+        sectionsContainer.innerHTML = '';
+        for (let i = 0; i < 2; i++) {
+          sectionsContainer.appendChild(createRoughEstimateSection(i));
         }
-        sectionsContainer.innerHTML = ''; // Clear first
-        try {
-            for (let i = 0; i < 2; i++) {
-              sectionsContainer.appendChild(createRoughEstimateSection(i));
-            }
-            updateTotals(); // Update totals after sections are added
-            console.log("Sections initialized successfully.");
-        } catch (error) {
-             console.error("Error during initializeSections:", error);
-        }
+        updateTotals();
   }
   initializeSections();
 
   // Add Section Button.
-  if(addSectionBtn){
-      addSectionBtn.addEventListener('click', () => {
-        console.log("Add section button clicked.");
-        try { // Wrap in try-catch
-            const index = sectionsContainer.children.length;
-            sectionsContainer.appendChild(createRoughEstimateSection(index));
-            updateTotals();
-        } catch (error) {
-            console.error("Error executing Add Section click handler:", error);
-        }
-      });
-      console.log("Add Section listener attached.");
-  } else {
-       console.error("Add Section button not found for listener.");
-  }
+  addSectionBtn.addEventListener('click', () => {
+    const index = sectionsContainer.children.length;
+    sectionsContainer.appendChild(createRoughEstimateSection(index));
+    updateTotals();
+  });
 
-
-  // Attach listeners to update totals for Piece Count & Special Features numbers.
-  try {
-      console.log("Attaching listeners to Piece Count/Special Features number inputs...");
-      document.querySelectorAll('#hingeDrilling input[type="number"], #specialFeatures input[type="number"]').forEach(input => {
-         input.addEventListener('input', updateTotals);
-         input.addEventListener('change', updateTotals);
-      });
-      console.log("Piece Count/Special Features number input listeners attached.");
-  } catch (error) {
-      console.error("Error attaching listeners to Piece Count/Special Features inputs:", error);
-  }
+  // Attach listeners to update totals.
+   document.querySelectorAll('#hingeDrilling input, #specialFeatures input').forEach(input => {
+       input.addEventListener('input', updateTotals);
+       input.addEventListener('change', updateTotals);
+   });
 
 
   // Clear All button functionality.
-  if(clearAllBtn){
-      clearAllBtn.addEventListener('click', () => {
-        console.log("Clear All button clicked.");
-        try {
-            // Reset non-Price Setup form elements more selectively
-            document.querySelectorAll('#roughEstimateContainer input, #roughEstimateContainer select, #otherPartsContainer input, #otherPartsContainer select').forEach(el => {
-                // Skip elements within Price Setup if they were somehow included
-                if (el.closest('#priceSetupContainer')) return;
+  clearAllBtn.addEventListener('click', () => {
+    // Reset non-Price Setup form elements
+    document.querySelectorAll('#roughEstimateContainer, #otherPartsContainer').forEach(container => {
+        container.querySelectorAll('input, select').forEach(el => { // Include select here for sections
+            if (el.closest('#priceSetupContainer')) return; // Skip if inside price setup
 
-                if (el.tagName === 'INPUT') {
-                    const type = el.type.toLowerCase();
-                    // Reset numbers to 0, others blank
-                    if (type === 'number') el.value = el.getAttribute('value') || '0';
-                    else if (type === 'text') el.value = '';
-                    // Add other input types if necessary
-                } else if (el.tagName === 'SELECT') {
-                    // Reset selects to the first option
-                    el.selectedIndex = 0;
-                }
-            });
-
-            // Reinitialize dynamic sections (Clears old ones, adds 2 new)
-            initializeSections(); // This also calls updateTotals
-
-            // Restore Price Setup values from saved object
-            const priceSetupValues = JSON.parse(localStorage.getItem('priceSetupValues') || '{}');
-            document.querySelectorAll('#priceSetupContainer input, #priceSetupContainer select').forEach(input => {
-                const fieldName = input.name;
-                if (!fieldName) return; // Skip inputs without names
-                let defaultValue = '';
-                if (input.tagName === 'SELECT') {
-                    defaultValue = 'no'; // Default for select
-                } else {
-                    defaultValue = input.getAttribute('value') || ''; // Default for input
-                }
-                input.value = priceSetupValues[fieldName] !== undefined ? priceSetupValues[fieldName] : defaultValue;
-            });
-
-            // Ensure Price Setup is expanded
-            priceSetupContainer.classList.remove('collapsed');
-            togglePriceSetupBtn.textContent = 'Hide';
-
-            // Reset Instructions Toggle state
-            if (instructionsDiv && toggleInstructionsBtn) {
-                instructionsDiv.style.display = 'none';
-                toggleInstructionsBtn.textContent = 'Show Directions';
+            if (el.tagName === 'INPUT') {
+                const type = el.type.toLowerCase();
+                if (type === 'number') el.value = el.getAttribute('value') || '0';
+                else if (type === 'text') el.value = '';
+            } else if (el.tagName === 'SELECT') {
+                el.selectedIndex = 0;
             }
+        });
+    });
 
-            // Clear results display
-            resultsDiv.innerHTML = '';
-            if (printBtnContainer) printBtnContainer.style.display = 'none';
+    // Explicitly reset counts
+     document.querySelector('input[name="numDrawers"]').value = "0";
+     document.querySelector('input[name="doors_0_36"]').value = "0";
+     document.querySelector('input[name="doors_36_60"]').value = "0";
+     document.querySelector('input[name="doors_60_82"]').value = "0";
+     document.querySelector('input[name="lazySusanQty"]').value = "0";
+     document.querySelector('input[name="customPaintQty"]').value = "0";
 
-            console.log("Clear All finished.");
-        } catch (error) {
-            console.error("Error during Clear All execution:", error);
-        }
+    // Reinitialize dynamic sections
+    initializeSections();
+
+    // Restore Price Setup values from saved object
+    const priceSetupValues = JSON.parse(localStorage.getItem('priceSetupValues') || '{}');
+    document.querySelectorAll('#priceSetupContainer input, #priceSetupContainer select').forEach(input => {
+        input.value = priceSetupValues[input.name] !== undefined ? priceSetupValues[input.name] : (input.getAttribute('value') || '');
+         // Explicitly reset the disposal dropdown to 'no' on clear
+         if (input.name === 'calculateDisposal') {
+             input.value = 'no';
+         }
+    });
+
+    // Ensure Price Setup is expanded
+    priceSetupContainer.classList.remove('collapsed');
+    togglePriceSetupBtn.textContent = 'Hide'; // Reset button text
+
+    // Clear results
+    resultsDiv.innerHTML = '';
+    printBtnContainer.style.display = 'none';
+
+    updateTotals();
+  });
+
+
+  // --- UPDATED: On form submit with improved error handling ---
+  calcForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    updateTotals(); // Ensure counts are current
+
+    const sections = [];
+    document.querySelectorAll('#sectionsContainer .section').forEach(sec => {
+        sections.push(getSectionData(sec));
+    });
+
+    const formData = new FormData(e.target);
+    const payload = {
+      sections: sections,
+      part2: {
+        numDrawers: parseInt(formData.get('numDrawers')) || 0,
+        doors_0_36: parseInt(formData.get('doors_0_36')) || 0,
+        doors_36_60: parseInt(formData.get('doors_36_60')) || 0,
+        doors_60_82: parseInt(formData.get('doors_60_82')) || 0,
+        lazySusanQty: parseInt(formData.get('lazySusanQty')) || 0,
+        totalDoors: globalTotalDoors // Send the ACTUAL door count
+      },
+      part3: {
+        customPaintQty: parseInt(formData.get('customPaintQty')) || 0
+      },
+      priceSetup: {
+        pricePerDoor: parseFloat(formData.get('pricePerDoor')) || 0,
+        pricePerDrawer: parseFloat(formData.get('pricePerDrawer')) || 0,
+        refinishingCostPerSqFt: parseFloat(formData.get('refinishingCostPerSqFt')) || 0,
+        pricePerLazySusan: parseFloat(formData.get('pricePerLazySusan')) || 0,
+        onSiteMeasuring: parseFloat(formData.get('onSiteMeasuring')) || 0,
+        doorDisposalCost: parseFloat(formData.get('doorDisposalCost')) || 0,
+        calculateDisposal: formData.get('calculateDisposal') || 'no',
+        onSiteMeasuringSqFt: globalTotalSqFt // Send updated global value
+      }
+    };
+
+    resultsDiv.innerHTML = '<p>Calculating...</p>'; // Show loading state
+    printBtnContainer.style.display = 'none';
+
+    try {
+      const response = await fetch('/calculate', { // Endpoint is '/calculate'
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
-      console.log("Clear All listener attached.");
-  } else {
-       console.error("Clear All button not found for listener.");
-  }
 
+      // --- START: AI Suggested Error Handling ---
+      if (!response.ok) { // Check if the response status is not OK (e.g., 404, 500)
+          const status = response.status;
+          let errorMsg = `HTTP error! status: ${status}`; // Default message
 
-  // On form submit, build the payload and send it.
-  if(calcForm){
-      calcForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        console.log("Form submitted. Preventing default.");
-        try {
-            updateTotals();
-            console.log("Totals updated for submit.");
-
-            // Build Payload
-            const sections = [];
-            document.querySelectorAll('#sectionsContainer .section').forEach(sec => {
-                sections.push(getSectionData(sec));
-            });
-            const formData = new FormData(e.target);
-            const payload = {
-              sections: sections,
-              part2: {
-                numDrawers: parseInt(formData.get('numDrawers')) || 0,
-                doors_0_36: parseInt(formData.get('doors_0_36')) || 0,
-                doors_36_60: parseInt(formData.get('doors_36_60')) || 0,
-                doors_60_82: parseInt(formData.get('doors_60_82')) || 0,
-                lazySusanQty: parseInt(formData.get('lazySusanQty')) || 0,
-                totalDoors: globalTotalDoors
-              },
-              part3: { // Contains only non-price-setup fields from its section
-                customPaintQty: parseInt(formData.get('customPaintQty')) || 0,
-                 // Disposal setting is now read from Price Setup below
-              },
-              priceSetup: { // Get all price setup values from form
-                pricePerDoor: parseFloat(formData.get('pricePerDoor')) || 0,
-                pricePerDrawer: parseFloat(formData.get('pricePerDrawer')) || 0,
-                refinishingCostPerSqFt: parseFloat(formData.get('refinishingCostPerSqFt')) || 0,
-                pricePerLazySusan: parseFloat(formData.get('pricePerLazySusan')) || 0,
-                onSiteMeasuring: parseFloat(formData.get('onSiteMeasuring')) || 0,
-                doorDisposalCost: parseFloat(formData.get('doorDisposalCost')) || 0,
-                calculateDisposal: formData.get('calculateDisposal') || 'no', // Get disposal setting from correct location
-                onSiteMeasuringSqFt: globalTotalSqFt
+          try {
+              // Try to parse error details from response body (if JSON)
+              const errorData = await response.json();
+              if (errorData && errorData.error) {
+                  errorMsg = errorData.error; // Use server's message
               }
-            };
-
-            console.log("Payload constructed:", JSON.stringify(payload, null, 2));
-
-            resultsDiv.innerHTML = '<p>Calculating...</p>';
-            if(printBtnContainer) printBtnContainer.style.display = 'none';
-
-            const response = await fetch('/calculate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            console.log("Fetch response received. Status:", response.status);
-
-            // Corrected Body Reading Logic
-            let responseData;
-            let responseBodyText = '';
-            try {
-                const clonedResponse = response.clone();
-                responseBodyText = await clonedResponse.text();
-                responseData = await response.json();
-            } catch (jsonError) {
-                console.warn("Could not parse response as JSON:", jsonError);
-                responseData = { error: `Invalid JSON response from server (Status: ${response.status}). Body: ${responseBodyText}` };
-                if (response.ok) {
-                     const formatError = new Error(responseData.error);
-                     formatError.status = response.status;
-                     throw formatError;
-                }
-            }
-
-            if (!response.ok) {
-                const status = response.status;
-                const errorMessage = responseData?.error || responseBodyText || `HTTP error! Status: ${status} ${response.statusText}`;
-                const error = new Error(errorMessage);
-                error.status = status;
-                console.error("Fetch response not OK:", error);
-                throw error;
-            }
-
-            console.log("Fetch successful. Displaying results...");
-            displayResults(responseData);
-            if(printBtnContainer) printBtnContainer.style.display = 'block';
-
-        } catch (err) {
-          console.error("Calculation Fetch/Process Error:", err);
-
-          let displayErrorMessage = err.message || 'An unknown error occurred.';
-
-          if (err.status === 404) {
-            displayErrorMessage = `Error: Calculation endpoint not found (404). Check server routing/deployment. Raw message: ${err.message}`;
-            console.error('Specific Error Detail: Resource Not Found (404)');
-          } else if (err.status) {
-             displayErrorMessage = `Error: Server returned status ${err.status}. Raw message: ${err.message}`;
-             console.error(`Specific Error Detail: HTTP Status ${err.status}`);
-          } else {
-              console.error("Specific Error Detail: Network error, CORS issue, or JS error before fetch.");
+          } catch (e) {
+              // If parsing fails or response is not JSON, add status text
+              errorMsg += ` - ${response.statusText || 'Could not parse error response.'}`;
           }
 
-          resultsDiv.innerHTML = `<div class="invoice-error"><p><strong>Error Calculating Estimate:</strong></p><p>${escape(displayErrorMessage)}</p></div>`;
-          if(printBtnContainer) printBtnContainer.style.display = 'none';
-        }
-      });
-      console.log("Submit listener attached to calcForm.");
-  } else {
-      console.error("Calculate form not found for listener attachment.");
-  }
+          const error = new Error(errorMsg);
+          error.status = status; // Attach status code to the error object
+          throw error; // Throw the created error to be caught below
+      }
+      // --- END: AI Suggested Error Handling ---
 
+      // If response.ok is true, parse the successful JSON response
+      const resultData = await response.json();
+      displayResults(resultData); // Display results
+      printBtnContainer.style.display = 'block'; // Show print button
 
-  // --- displayResults function (keep as is) ---
-  function displayResults(resultData) {
-    console.log("Displaying results for:", resultData);
-     if (!resultData || typeof resultData !== 'object') {
-        console.error("Invalid resultData received in displayResults:", resultData);
-        resultsDiv.innerHTML = `<div class="invoice-error"><p><strong>Error:</strong></p><p>Received invalid response format from server.</p></div>`;
-        if (printBtnContainer) printBtnContainer.style.display = 'none';
-        return;
+    } catch (err) {
+      // --- START: Catch block with specific 404 check ---
+      console.error("Calculation Error Full:", err); // Log the full error object regardless
+
+      let displayErrorMessage = err.message || 'An unknown error occurred.'; // Default message
+
+      // Customize display message based on status if available
+      if (err.status === 404) {
+        displayErrorMessage = `Error: Calculation endpoint not found (404). Please check server configuration and routing. (${err.message})`;
+        console.error('Specific Error: Resource Not Found (404)');
+      } else if (err.status) {
+         displayErrorMessage = `Error: Server returned status ${err.status}. (${err.message})`;
+         console.error(`Specific Error: HTTP Status ${err.status}`);
+      } else {
+          // Likely a network error (fetch couldn't even reach server) or CORS
+          console.error("Specific Error: Network error or CORS issue likely.");
+          // Keep the default err.message from the fetch failure
+      }
+
+      // Display the potentially customized error message, escaping it for safety
+      resultsDiv.innerHTML = `<div class="invoice-error"><p><strong>Error Calculating Estimate:</strong></p><p>${escapeHTML(displayErrorMessage)}</p></div>`;
+      printBtnContainer.style.display = 'none'; // Hide print button on error
+      // --- END: Catch block ---
     }
-    if (resultData.error) {
-        console.error("Server returned error:", resultData.error);
-        resultsDiv.innerHTML = `<div class="invoice-error"><p><strong>Error from Server:</strong></p><p>${escape(resultData.error)}</p></div>`;
-        if (printBtnContainer) printBtnContainer.style.display = 'none';
-        return;
+  });
+  // --- END UPDATED SUBMIT HANDLER ---
+
+
+  // Display results in a professional invoice style.
+  function displayResults(resultData) {
+    if (!resultData || resultData.error) {
+      resultsDiv.innerHTML = `<div class="invoice-error"><p><strong>Error from Server:</strong></p><p>${escapeHTML(resultData?.error || 'Invalid response received.')}</p></div>`;
+      printBtnContainer.style.display = 'none';
+      return;
     }
 
     const today = new Date();
     const dateStr = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    const specialFeatures = resultData.specialFeatures || {};
-    const installation = resultData.installation || {};
-    const part2 = resultData.part2 || {};
-    const priceSetup = resultData.priceSetup || {};
-
-
+    // Main Summary Values
     const overallTotal = formatCurrency(resultData.overallTotal);
     const allSectionsCost = formatCurrency(resultData.doorCostTotal);
     const hingeCost = formatCurrency(resultData.hingeCost);
@@ -568,23 +438,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const measuringCost = formatCurrency(resultData.measuringCost);
     const disposalCostVal = resultData.disposalCost || 0;
     const disposalCost = formatCurrency(disposalCostVal);
-    const customPaintCostVal = specialFeatures.customPaintCost || 0;
+    const customPaintCostVal = resultData.specialFeatures?.customPaintCost || 0;
     const customPaintCost = formatCurrency(customPaintCostVal);
-    const totalInstallCost = formatCurrency(installation.totalInstall);
-    const lazySusanSurchargeVal = (part2.lazySusanQty || 0) * 50;
+    const totalInstallCost = formatCurrency(resultData.installation?.totalInstall);
+    const lazySusanSurchargeVal = (resultData.part2?.lazySusanQty || 0) * 50; // Calculate surcharge for display if needed
 
+    // Internal Details Values
     const costToInstaller = formatCurrency(resultData.costToInstaller);
     const profitMargin = formatCurrency(resultData.profitMargin);
-    const actualTotalDoors = part2.totalDoors ?? 0;
-    const lazySusanQty = part2.lazySusanQty ?? 0;
+    const actualTotalDoors = resultData.part2?.totalDoors ?? 0;
+    const lazySusanQty = resultData.part2?.lazySusanQty ?? 0;
     const displayedTotalDoors = actualTotalDoors + (lazySusanQty * 2);
-    const totalDrawers = part2.numDrawers ?? 0;
+    const totalDrawers = resultData.part2?.numDrawers ?? 0;
     const hingeCount = resultData.hingeCount ?? 'N/A';
     const doorsForDisposal = resultData.doorsForDisposal ?? 0;
-    const drawersForDisposal = 0; // Assuming backend doesn't send this
     const lazySusansForDisposal = resultData.lazySusansForDisposal ?? 0;
-    const calculateDisposalFlag = priceSetup.calculateDisposal === 'yes';
-
+    const calculateDisposalFlag = resultData.priceSetup?.calculateDisposal === 'yes';
 
     let html = `
       <div class="invoice">
@@ -598,12 +467,12 @@ document.addEventListener('DOMContentLoaded', () => {
         <table class="summary-table">
           <tbody>
             <tr><td class="table-label">Door & Drawer Fronts (All Sections)</td><td class="table-value">${allSectionsCost}</td></tr>
-            <tr><td class="table-label">Hinge & Hardware Charge</td><td class="table-value">${hingeCost}</td></tr>
+            <tr><td class="table-label">Hinge Drilling</td><td class="table-value">${hingeCost}</td></tr>
             ${customPaintCostVal > 0 ? `<tr><td class="table-label">Custom Paint</td><td class="table-value">${customPaintCost}</td></tr>` : ''}
             <tr><td class="table-label">Refinishing (${globalTotalSqFt.toFixed(2)} sq ft)</td><td class="table-value">${refinishingCost}</td></tr>
             <tr><td class="table-label">On-Site Measuring</td><td class="table-value">${measuringCost}</td></tr>
             <tr><td class="table-label">Installation (Doors, Drawers, Lazy Susans)</td><td class="table-value">${totalInstallCost}</td></tr>
-            ${disposalCostVal > 0 ? `<tr><td class="table-label">Disposal Fee</td><td class="table-value">${disposalCost}</td></tr>` : ''}
+            ${disposalCostVal > 0 ? `<tr><td class="table-label">Disposal</td><td class="table-value">${disposalCost}</td></tr>` : ''}
             ${lazySusanSurchargeVal > 0 ? `<tr><td class="table-label">Lazy Susan Surcharge</td><td class="table-value">${formatCurrency(lazySusanSurchargeVal)}</td></tr>` : ''}
           </tbody>
           <tfoot>
@@ -620,16 +489,15 @@ document.addEventListener('DOMContentLoaded', () => {
                  <tr><td>Actual Doors (for Install Cost):</td><td>${actualTotalDoors}</td></tr>
                  <tr><td>Number of Lazy Susans:</td><td>${lazySusanQty}</td></tr>
                  <tr><td>Hinge Count:</td><td>${hingeCount}</td></tr>
-                 <tr><td>Installation - Doors:</td><td>${formatCurrency(installation.doorInstall)}</td></tr>
-                 <tr><td>Installation - Drawers:</td><td>${formatCurrency(installation.drawerInstall)}</td></tr>
-                 <tr><td>Installation - Lazy Susans:</td><td>${formatCurrency(installation.lazySusanInstall)}</td></tr>
+                 <tr><td>Installation - Doors:</td><td>${formatCurrency(resultData.installation?.doorInstall)}</td></tr>
+                 <tr><td>Installation - Drawers:</td><td>${formatCurrency(resultData.installation?.drawerInstall)}</td></tr>
+                 <tr><td>Installation - Lazy Susans:</td><td>${formatCurrency(resultData.installation?.lazySusanInstall)}</td></tr>
                  ${lazySusanSurchargeVal > 0 ? `<tr><td>Lazy Susan Surcharge:</td><td>${formatCurrency(lazySusanSurchargeVal)}</td></tr>` : ''}
                  <tr><td>Cost To Installer (Materials + Hinge Drilling):</td><td>${costToInstaller}</td></tr>
                  <tr><td>Profit Margin:</td><td>${profitMargin}</td></tr>
                  ${calculateDisposalFlag ? `
                  <tr><td colspan="2" style="padding-top:1em; font-weight:bold; border-bottom: none;">Disposal Details (Calculated):</td></tr>
                  <tr><td>   Doors for Disposal:</td><td>${doorsForDisposal}</td></tr>
-                 <tr><td>   Drawers for Disposal:</td><td>${drawersForDisposal}</td></tr>
                  <tr><td>   Lazy Susans for Disposal:</td><td>${lazySusansForDisposal}</td></tr>
                  <tr><td>   Calculated Disposal Cost:</td><td>${disposalCost}</td></tr>
                  ` : `
@@ -643,7 +511,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     resultsDiv.innerHTML = html;
 
-    // Re-attach listener for the toggle button inside the results
     const toggleBtn = document.getElementById('toggleDetailsBtn');
     const detailsDiv = document.getElementById('internalDetails');
     if (toggleBtn && detailsDiv) {
@@ -652,25 +519,18 @@ document.addEventListener('DOMContentLoaded', () => {
             detailsDiv.style.display = isHidden ? 'block' : 'none';
             toggleBtn.textContent = isHidden ? 'Hide Internal Details' : 'Show Internal Details';
         });
-         console.log("Toggle Details listener attached.");
-    } else {
-        console.error("Toggle Details button or div not found after results display.");
     }
-
-    if(printBtnContainer) printBtnContainer.style.display = 'block';
+    printBtnContainer.style.display = 'block';
   }
 
-  // --- Keep print logic and conditional print logic ---
+  // Attach print functionality.
    const printEstimateBtn = document.getElementById('printEstimate');
    if (printEstimateBtn) {
        printEstimateBtn.addEventListener('click', () => window.print());
-        console.log("Print listener attached.");
-   } else {
-        console.error("Print button not found for listener.");
    }
 
-
-   window.onbeforeprint = () => {
+   // Conditional Printing Logic.
+    window.onbeforeprint = () => {
         const resultsDivActive = document.getElementById('results');
         const internalDetailsDiv = resultsDivActive ? resultsDivActive.querySelector('#internalDetails') : null;
         if (internalDetailsDiv && internalDetailsDiv.style.display !== 'none') {
@@ -688,19 +548,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-  /** Helper function to escape HTML (simple version) */
-  function escape(str) {
-    console.log("Escape function called."); // Log when escape is called
-    if (!str) return '';
-    const map = { '&': '&', '<': '<', '>': '>', '"': '"', "'": ''' };
-    // Use a regex that correctly handles all specified characters
-    return String(str).replace(/[&<>"']/g, function (m) { return map[m]; });
-  }
-  console.log("Escape function defined.");
-
-
-   console.log("script.js: DOMContentLoaded setup complete."); // Final Debug Log
-
 }); // End DOMContentLoaded
 
-console.log("script.js: File finished parsing."); // Log file end
+// --- END OF FILE script.js ---
