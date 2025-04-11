@@ -1,47 +1,92 @@
-// --- DIAGNOSTIC server.js ---
-// Purpose: Test Vercel routing and function invocation. Does NOT perform calculations.
+// --- LOCAL DEVELOPMENT server.js ---
+// Purpose: Run the nuCalc server locally on a specified port.
 
 const express = require('express');
+const fs = require('fs'); // Keep fs for pricingData
 const path = require('path');
-const app = express();
+const { calculateOverallTotal } = require('./calculation'); // Bring back calculation
 
-// Log ALL requests that reach this server function
+const app = express();
+const PORT = process.env.PORT || 3000; // Use environment variable or default
+
+app.use(express.json()); // Middleware to parse JSON bodies
+
+// Log requests locally if desired
 app.use((req, res, next) => {
-  console.log(`DIAGNOSTIC: Received request: ${req.method} ${req.url}`);
-  // Avoid logging potentially large bodies or sensitive headers in production logs
-  // console.log(`DIAGNOSTIC: Headers: ${JSON.stringify(req.headers)}`);
-  next(); // Continue to next middleware/route
+  console.log(`LOCAL: Request: ${req.method} ${req.url}`);
+  // Example: Check if body exists before logging
+  // if (req.body && Object.keys(req.body).length > 0) {
+  //    console.log(`LOCAL: Request Body: ${JSON.stringify(req.body)}`);
+  // }
+  next();
 });
 
-// Static files (Keep this to serve index.html, script.js etc.)
-// Make sure the 'public' folder exists at the project root
+// Static files from 'public' folder
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Simple /calculate route for testing invocation
+// --- Load Pricing Data ---
+let pricingData = {};
+const pricingDataPath = path.join(__dirname, 'pricingData.json');
+try {
+    if (fs.existsSync(pricingDataPath)) {
+        const rawData = fs.readFileSync(pricingDataPath);
+        pricingData = JSON.parse(rawData);
+        console.log("pricingData.json loaded successfully.");
+    } else {
+        console.error("ERROR: pricingData.json not found at path:", pricingDataPath);
+        // Handle missing file - calculations might fail or return 0s
+    }
+} catch (error) {
+    console.error("Error loading or parsing pricingData.json:", error);
+}
+// --- End Load Pricing Data ---
+
+
+// --- /calculate Route (Full logic) ---
 app.post('/calculate', (req, res) => {
-  console.log(`DIAGNOSTIC: Reached POST /calculate handler.`);
-  // Send a simple success response for testing
-  res.status(200).json({ message: "Calculate route hit successfully!" });
+  try {
+    const payload = req.body;
+    // Basic validation - ensure all expected top-level keys exist
+    if (!payload || typeof payload !== 'object' || !payload.sections || !payload.part2 || !payload.part3 || !payload.priceSetup) {
+        console.error("Invalid payload structure received:", payload);
+        // Send a more informative error
+        return res.status(400).json({ error: 'Invalid request payload structure. Missing required keys (sections, part2, part3, priceSetup).' });
+    }
+
+    // Call the actual calculation function
+    const result = calculateOverallTotal(payload, pricingData);
+
+    // Check if calculation returned an error itself (optional internal check)
+    if (result && result.error) {
+         console.error('Calculation function returned an error:', result.error);
+         return res.status(500).json({ error: result.error }); // Pass internal error if available
+    }
+
+    res.json(result); // Send the successful result
+
+  } catch (error) {
+    // Catch unexpected errors during calculation or response handling
+    console.error('-----------------------------------');
+    console.error('Calculation Route Error Details:');
+    console.error('Timestamp:', new Date().toISOString());
+    console.error('Error Message:', error.message);
+    console.error('Error Stack:', error.stack);
+    // Avoid logging full body in production, but useful for local debugging
+    console.error('Payload Received:', JSON.stringify(req.body, null, 2));
+    console.error('-----------------------------------');
+    res.status(500).json({ error: 'Internal server error during calculation.' });
+  }
 });
+// --- End /calculate Route ---
 
-// Basic root handler (this might not be hit if index.html is served by static)
-app.get('/', (req, res) => {
-  console.log(`DIAGNOSTIC: Reached GET / handler (likely served by static first).`);
-  // You won't see this response if public/index.html exists and is served
-  res.status(200).send('Hello from GET / handler in server.js');
-});
+// --- ADD THIS BACK for Local Execution ---
+// Only listen if the script is run directly (not required by Vercel)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running locally on port ${PORT}`);
+  });
+}
+// --- END ADD BACK ---
 
-// Catch-all for any other request reaching the server function
-// This helps identify if requests are unexpectedly bypassing specific routes
-app.use((req, res) => {
-    console.log(`DIAGNOSTIC: Reached CATCH-ALL handler for ${req.method} ${req.url}`);
-    res.status(404).send(`Server catch-all: Route ${req.method} ${req.url} not handled by server.js.`);
-});
-
-
-// --- IMPORTANT: Export the Express app for Vercel ---
+// --- IMPORTANT: Keep exporting the app for Vercel ---
 module.exports = app;
-
-// NOTE: Removed pricingData loading, calculation logic, and conditional app.listen
-//       for this specific diagnostic test. Remember to revert after testing!
-// --- END DIAGNOSTIC server.js ---

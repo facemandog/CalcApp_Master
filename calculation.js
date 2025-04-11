@@ -133,25 +133,32 @@ function calculateOverallTotal(payload, pricingData) {
   // Conditional Disposal Cost Calculation
   let disposalCost = 0;
   let doorsForDisposal = 0;
+  let drawersForDisposal = 0; // Track drawers separately
   let lazySusansForDisposal = 0;
-  if (payload.priceSetup.calculateDisposal === 'yes') {
+
+  // Check the flag from part3 now
+  if (payload.part3.calculateDisposal === 'yes') {
     doorsForDisposal = Number(payload.part2.totalDoors || 0); // Actual doors
+    drawersForDisposal = Number(payload.part2.numDrawers || 0); // Number of drawers
     lazySusansForDisposal = Number(payload.part2.lazySusanQty || 0);
+
     const doorDisposalRate = Number(payload.priceSetup.doorDisposalCost || 0);
-    const totalDisposalUnits = doorsForDisposal + (lazySusansForDisposal * 2); // LS counts as 2 here
+
+    // Calculate total units: Doors + Drawers + (Lazy Susans * 2)
+    const totalDisposalUnits = doorsForDisposal + drawersForDisposal + (lazySusansForDisposal * 2);
+
     disposalCost = totalDisposalUnits * doorDisposalRate;
   }
 
-  // --- NEW: Calculate Lazy Susan Surcharge ---
+  // Calculate Lazy Susan Surcharge
   const lazySusanQty = Number(payload.part2.lazySusanQty || 0);
-  const lazySusanSurchargePerUnit = 50; // $50 surcharge per unit
+  const lazySusanSurchargePerUnit = 50;
   const lazySusanSurchargeTotal = lazySusanQty * lazySusanSurchargePerUnit;
-  // --- END: Surcharge Calculation ---
 
   // Cost to Installer
   const costToInstaller = Number(totalAllSectionCost) + Number(hingeCost);
 
-  // Overall Total - Add the surcharge here
+  // --- CORRECTED Overall Total Sum ---
   const overallTotal =
     Number(totalAllSectionCost || 0) +
     Number(hingeCost || 0) +
@@ -160,7 +167,8 @@ function calculateOverallTotal(payload, pricingData) {
     Number(measuringCost || 0) +
     Number(installation.totalInstall || 0) +
     Number(disposalCost || 0) +
-    Number(lazySusanSurchargeTotal || 0); // <<< ADDED Surcharge
+    Number(lazySusanSurchargeTotal || 0); // Added surcharge correctly
+  // --- END CORRECTION ---
 
   // Profit Margin
   const profitMargin = Number(overallTotal) - Number(costToInstaller);
@@ -193,9 +201,11 @@ function calculateOverallTotal(payload, pricingData) {
     // lazySusanSurcharge: format(lazySusanSurchargeTotal), // Optional: return surcharge separately
     disposalCost: format(disposalCost),
     doorsForDisposal,
+    drawersForDisposal, // <<< ADDED Drawers for disposal to return object
     lazySusansForDisposal,
     sections: sectionBreakdown,
     part2: payload.part2, // Contains original lazySusanQty needed by frontend
+    part3: payload.part3, // <<< Pass back part3 (contains flag)
     priceSetup: payload.priceSetup
   };
 }
