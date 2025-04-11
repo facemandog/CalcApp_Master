@@ -1,29 +1,15 @@
 {
   "version": 2,
   "builds": [
-    // Build the Node.js server function
-    {
-      "src": "server.js",
-      "use": "@vercel/node"
-    },
-    // Tell Vercel about the static files in 'public'
     {
       "src": "public/**/*",
       "use": "@vercel/static"
     }
   ],
   "routes": [
-    // Route API calls specifically to the server function
     {
-      "src": "/calculate", // Match only the /calculate path
-      "methods": ["POST"], // Match only POST method
-      "dest": "server.js"  // Send it to the Node function
-    },
-    // Serve static files from the 'public' directory build output
-    // This handles /, /script.js, /assets/*, etc.
-    {
-      "src": "/(.*)",       // Match any other path
-      "dest": "/public/$1"  // Serve the corresponding file from the public build output
+      "src": "/(.*)",
+      "dest": "/public/$1"
     }
   ]
 }
