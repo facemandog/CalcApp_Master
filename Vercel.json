@@ -8,7 +8,7 @@
   ],
   "routes": [
     {
-      "src": "/calculate",
+      "src": "/calculation",
       "methods": ["POST"],    
       "dest": "server.js"      
     }
