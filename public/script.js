@@ -538,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  <tr><td>Installation - Drawers:</td><td>${formatCurrency(installation.drawerInstall)}</td></tr>
                  <tr><td>Installation - Lazy Susans:</td><td>${formatCurrency(installation.lazySusanInstall)}</td></tr>
 				 <tr></tr>
-				 
+				 <tr></tr>
                  ${lazySusanSurchargeVal > 0 ? `<tr><td>Lazy Susan Surcharge Applied:</td><td>${formatCurrency(lazySusanSurchargeVal)}</td></tr>` : ''}
                  <tr><td>Cost To Installer (Materials + Hinge Drilling):</td><td>${costToInstaller}</td></tr>
                  <tr><td>Profit Margin:</td><td>${profitMargin}</td></tr>
