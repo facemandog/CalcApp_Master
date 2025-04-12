@@ -1,5 +1,5 @@
 // --- START OF FILE script.js ---
-// (Corrections for Disposal Dropdown Logic)
+// (Neumorphic Style Update - JS)
 
 console.log("script.js: File loading...");
 
@@ -15,7 +15,7 @@ const drawerStyles = doorStyles.filter(style =>
 
 // Global variables
 let globalTotalSqFt = 0;
-let globalTotalDoors = 0; // Actual doors entered
+let globalTotalDoors = 0; // This represents ACTUAL doors entered
 let globalTotalDrawers = 0;
 
 /** Retrieves data from a dynamic Rough Estimate section. */
@@ -101,15 +101,24 @@ function loadPricingSettings() {
       const input = document.querySelector(`#priceSetupContainer [name="${fieldName}"]`);
       if (input) {
         const savedValue = localStorage.getItem(fieldName);
-        if (savedValue !== null) input.value = savedValue;
-        else if (input.getAttribute('value')) input.value = input.getAttribute('value');
+        // Use saved value if it exists, otherwise use HTML 'value' attribute as default
+        if (savedValue !== null) {
+            input.value = savedValue;
+        } else {
+            const defaultValue = input.getAttribute('value');
+            if (defaultValue !== null) {
+                input.value = defaultValue;
+                // Optional: Save default to localStorage if not found? Maybe not needed.
+                // localStorage.setItem(fieldName, defaultValue);
+            }
+        }
       }
     });
 
-    // Load disposal setting separately
+    // Load disposal setting separately from Special Features section
     const disposalSelect = document.querySelector('#specialFeatures select[name="calculateDisposal"]');
     if (disposalSelect) {
-        const savedDisposal = localStorage.getItem('calculateDisposal');
+        const savedDisposal = localStorage.getItem('calculateDisposal'); // Use specific key
         disposalSelect.value = savedDisposal || 'no'; // Default to 'no' if not saved
     }
     saveCurrentSettings(); // Save initial state including disposal setting
@@ -117,24 +126,28 @@ function loadPricingSettings() {
 
 /** Saves a setting field's value to localStorage. */
 function saveSetting(e) {
+    // Only save fields that have a 'name' attribute
     if (e.target.name) {
       localStorage.setItem(e.target.name, e.target.value);
-      saveCurrentSettings(); // Update the full saved object
+      saveCurrentSettings(); // Update the full saved object representation
     }
 }
 
-/** Helper function to save the current state of price setup inputs AND disposal setting. */
+/** Helper function to save the current state of *relevant* settings for potential later use (or just pricing). */
 function saveCurrentSettings() {
     const currentSettings = {};
-    // Get values from price setup
-    document.querySelectorAll('#priceSetupContainer input, #priceSetupContainer select').forEach(input => {
-        if (input.name) currentSettings[input.name] = input.value;
+    // Query relevant inputs/selects across different containers
+    document.querySelectorAll(`
+        #priceSetupContainer input[type="number"],
+        #specialFeatures select[name="calculateDisposal"],
+        #specialFeatures input[name="customPaintQty"]
+        /* Add other settings here if needed */
+    `).forEach(input => {
+        if (input.name) {
+            currentSettings[input.name] = input.value;
+        }
     });
-    // Get value from disposal dropdown
-    const disposalSelect = document.querySelector('#specialFeatures select[name="calculateDisposal"]');
-    if (disposalSelect) currentSettings['calculateDisposal'] = disposalSelect.value;
-
-    localStorage.setItem('currentSettings', JSON.stringify(currentSettings)); // Use a different key for combined settings
+    localStorage.setItem('currentSettings', JSON.stringify(currentSettings)); // Save combined state if needed later
 }
 
 
@@ -207,13 +220,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Attach listeners to relevant inputs/selects for saving state
   try {
       console.log("Attaching saveSetting listeners...");
+      // Listen to changes in price setup and the disposal dropdown in special features
       document.querySelectorAll(`
           #priceSetupContainer input[type="number"],
           #specialFeatures select[name="calculateDisposal"]
       `).forEach(input => {
           input.addEventListener('change', saveSetting);
           if (input.type === 'number') {
-              input.addEventListener('input', saveSetting); // Save number inputs as they type too
+              input.addEventListener('input', saveSetting);
           }
       });
       console.log("saveSetting listeners attached.");
@@ -224,7 +238,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Attach listeners needed for updateTotals
    try {
        console.log("Attaching updateTotals listeners...");
-       document.querySelectorAll('#hingeDrilling input[type="number"], #specialFeatures input[type="number"], #specialFeatures select[name="calculateDisposal"]').forEach(input => {
+       // Listen to piece counts and custom paint quantity
+       document.querySelectorAll('#hingeDrilling input[type="number"], #specialFeatures input[type="number"]').forEach(input => {
            input.addEventListener('input', updateTotals);
            input.addEventListener('change', updateTotals);
        });
@@ -237,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (togglePriceSetupBtn && priceSetupContainer) {
       togglePriceSetupBtn.addEventListener('click', () => {
         const isCollapsed = priceSetupContainer.classList.contains('collapsed');
-        priceSetupContainer.classList.toggle('collapsed', !isCollapsed); // More concise toggle
+        priceSetupContainer.classList.toggle('collapsed', !isCollapsed);
         togglePriceSetupBtn.textContent = isCollapsed ? 'Hide' : 'Show';
       });
       console.log("Price Setup toggle listener attached.");
@@ -285,65 +300,60 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log("Add Section listener attached.");
   } else { console.error("Add Section button not found."); }
 
-  // Clear All button functionality.
-  if(clearAllBtn){
-      clearAllBtn.addEventListener('click', () => {
-        console.log("Clear All button clicked.");
-        try {
-            // Reset forms excluding price setup
-            document.querySelectorAll('#roughEstimateContainer, #otherPartsContainer').forEach(container => {
-                const form = container.closest('form'); // Find the parent form if needed
-                container.querySelectorAll('input, select').forEach(el => {
-                    if (el.closest('#priceSetupContainer')) return; // Skip price setup
-                    if (el.type === 'number') el.value = el.getAttribute('value') || '0';
-                    else if (el.type === 'text') el.value = '';
-                    else if (el.tagName === 'SELECT') {
-                         // Explicitly set disposal to 'no'
-                         if(el.name === 'calculateDisposal') {
-                             el.value = 'no';
-                         } else {
-                             el.selectedIndex = 0;
-                         }
-                    }
-                });
-            });
+  // --- CORRECTED Clear All button functionality ---
+  clearAllBtn.addEventListener('click', () => {
+    console.log("Clear All button clicked.");
+    try {
+        // Reset non-Price Setup form elements first
+        document.querySelectorAll('#roughEstimateContainer input, #roughEstimateContainer select, #otherPartsContainer input, #otherPartsContainer select').forEach(el => {
+            if (el.closest('#priceSetupContainer')) return; // Skip price setup elements
 
-            // Explicitly reset counts
-            document.querySelectorAll('#hingeDrilling input[type="number"]').forEach(input => { input.value = '0'; });
-            document.querySelectorAll('#specialFeatures input[type="number"]').forEach(input => { input.value = '0'; });
-
-            initializeSections(); // Re-create default sections
-
-            // Restore Price Setup values only
-            const currentSettings = JSON.parse(localStorage.getItem('currentSettings') || '{}');
-            document.querySelectorAll('#priceSetupContainer input, #priceSetupContainer select').forEach(input => {
-                if (input.name && currentSettings.hasOwnProperty(input.name)) {
-                    input.value = currentSettings[input.name];
-                } else if (input.name) {
-                    const defaultValue = input.getAttribute('value');
-                    input.value = defaultValue || (input.tagName === 'SELECT' ? 'no' : '');
+            if (el.tagName === 'INPUT') {
+                const type = el.type.toLowerCase();
+                if (type === 'number') {
+                    // Use value attribute as default, otherwise '0'
+                    el.value = el.getAttribute('value') || '0';
+                } else if (type === 'text') { // Handle potential future text inputs
+                    el.value = '';
                 }
-            });
-            // Ensure the disposal dropdown in Special Features is explicitly reset, as it's not restored above
-            const disposalSelect = document.querySelector('#specialFeatures select[name="calculateDisposal"]');
-            if (disposalSelect) disposalSelect.value = 'no';
-
-
-            priceSetupContainer.classList.remove('collapsed');
-            togglePriceSetupBtn.textContent = 'Hide';
-            if (instructionsDiv && toggleInstructionsBtn) {
-                instructionsDiv.style.display = 'none';
-                toggleInstructionsBtn.textContent = 'Show Directions';
+            } else if (el.tagName === 'SELECT') {
+                 // Explicitly set disposal dropdown to 'no'
+                 if(el.name === 'calculateDisposal') {
+                     el.value = 'no';
+                 } else {
+                     el.selectedIndex = 0; // Reset others to first option
+                 }
             }
-            resultsDiv.innerHTML = '';
-            if (printBtnContainer) printBtnContainer.style.display = 'none';
+        });
 
-            updateTotals(); // Update totals based on reset values
-            console.log("Clear All finished.");
-        } catch (error) { console.error("Error during Clear All execution:", error); }
-      });
-      console.log("Clear All listener attached.");
-  } else { console.error("Clear All button not found."); }
+        // Reinitialize dynamic sections (clears old, adds 2 new default ones)
+        initializeSections();
+
+        // Restore ONLY Price Setup values from saved object in localStorage
+        // Note: 'currentSettings' might contain more than just price setup now,
+        // let's load specifically saved price setup values if possible, or use defaults.
+        // We will rely on loadPricingSettings to restore price defaults correctly.
+        loadPricingSettings(); // Reload defaults and saved price settings
+
+        // Ensure Price Setup visual state is correct
+        priceSetupContainer.classList.remove('collapsed');
+        togglePriceSetupBtn.textContent = 'Hide';
+
+        // Reset Instructions Toggle state
+        if (instructionsDiv && toggleInstructionsBtn) {
+            instructionsDiv.style.display = 'none';
+            toggleInstructionsBtn.textContent = 'Show Directions';
+        }
+
+        resultsDiv.innerHTML = ''; // Clear results
+        if (printBtnContainer) printBtnContainer.style.display = 'none'; // Hide print button
+
+        updateTotals(); // Recalculate totals based on reset state
+        console.log("Clear All finished.");
+    } catch (error) { console.error("Error during Clear All execution:", error); }
+  });
+  console.log("Clear All listener attached.");
+  // --- END CORRECTION ---
 
 
   // On form submit
@@ -361,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sections.push(getSectionData(sec));
             });
             const formData = new FormData(e.target);
-            // --- CORRECTED PAYLOAD STRUCTURE ---
+            // --- Payload with Disposal Flag under part3 ---
             const payload = {
               sections: sections,
               part2: { // Data from 'Piece Count' section
@@ -383,7 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 pricePerLazySusan: parseFloat(formData.get('pricePerLazySusan')) || 0,
                 onSiteMeasuring: parseFloat(formData.get('onSiteMeasuring')) || 0,
                 doorDisposalCost: parseFloat(formData.get('doorDisposalCost')) || 0,
-                // Disposal flag now comes from part3
+                // Disposal flag is now in part3
                 onSiteMeasuringSqFt: globalTotalSqFt // Send calculated SqFt
               }
             };
@@ -405,23 +415,20 @@ document.addEventListener('DOMContentLoaded', () => {
             let responseData = {};
             let responseBodyText = '';
             try {
-                const clonedResponse = response.clone(); // Clone to read text first
-                responseBodyText = await clonedResponse.text(); // Read text first
+                const clonedResponse = response.clone();
+                responseBodyText = await clonedResponse.text();
                 if (response.ok) {
-                    responseData = JSON.parse(responseBodyText); // Parse JSON only if OK
+                    responseData = JSON.parse(responseBodyText);
                 }
             } catch (jsonError) {
                 console.warn("Could not parse response as JSON:", jsonError);
-                if (response.ok) { // If status was ok, but JSON failed, it's a server format error
+                if (response.ok) {
                      responseData = { error: `Invalid JSON response from server (Status: ${response.status}). Body: ${responseBodyText}` };
-                     // Throw this as it indicates success status but bad data
                      const formatError = new Error(responseData.error);
                      formatError.status = response.status;
                      throw formatError;
                 }
-                // If status was not ok and parsing failed, use text later
             }
-
 
             if (!response.ok) {
                 const status = response.status;
@@ -442,7 +449,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (err.status === 404) displayErrorMessage = `Error: Calculation endpoint not found (404). Please check server configuration/deployment. (${err.message})`;
             else if (err.status) displayErrorMessage = `Error: Server returned status ${err.status}. (${err.message})`;
 
-            // Ensure escapeHTML function exists before using
             const escapedMsg = typeof escapeHTML === 'function' ? escapeHTML(displayErrorMessage) : displayErrorMessage;
             resultsDiv.innerHTML = `<div class="invoice-error"><p><strong>Error Calculating Estimate:</strong></p><p>${escapedMsg}</p></div>`;
             if(printBtnContainer) printBtnContainer.style.display = 'none';
@@ -452,7 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
   } else { console.error("Calculate form not found."); }
 
 
-  // --- displayResults function (keep mostly as is, ensure data access is safe) ---
+  // displayResults function (updated to use part3 for disposal flag)
   function displayResults(resultData) {
     console.log("Displaying results for:", resultData);
      if (!resultData || typeof resultData !== 'object' || resultData.error) {
@@ -466,12 +472,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const today = new Date();
     const dateStr = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    // Safely access nested properties with defaults
     const specialFeatures = resultData.specialFeatures || {};
     const installation = resultData.installation || {};
     const part2 = resultData.part2 || {};
-    const part3 = resultData.part3 || {}; // Need part3 for disposal flag
-    const priceSetup = resultData.priceSetup || {};
+    const part3 = resultData.part3 || {}; // Get part3 from response
+    const priceSetup = resultData.priceSetup || {}; // Get priceSetup from response
 
 
     const overallTotal = formatCurrency(resultData.overallTotal);
@@ -494,7 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalDrawers = part2.numDrawers ?? 0;
     const hingeCount = resultData.hingeCount ?? 'N/A';
     const doorsForDisposal = resultData.doorsForDisposal ?? 0;
-    const drawersForDisposal = resultData.drawersForDisposal ?? 0; // Get from backend
+    const drawersForDisposal = resultData.drawersForDisposal ?? 0;
     const lazySusansForDisposal = resultData.lazySusansForDisposal ?? 0;
     const calculateDisposalFlag = part3.calculateDisposal === 'yes'; // Check flag from part3
 
@@ -502,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let html = `
       <div class="invoice">
         <div class="invoice-header">
-           <!-- Removed logo from here, keep it in main header -->
+           <img src="assets/logo.png" alt="nuDoors Logo" class="invoice-logo">
            <h1>Project Estimate</h1>
            <p>Date: ${dateStr}</p>
         </div>
@@ -529,16 +534,15 @@ document.addEventListener('DOMContentLoaded', () => {
             <h3>Internal Cost Breakdown</h3>
              <table class="details-table">
 				 <tr><td>Total Drawers:</td><td>${totalDrawers}</td></tr>
-                 <tr><td>Total Doors:</td><td>${displayedTotalDoors}</td></tr>
+                 <tr><td>Total Actual Doors:</td><td>${actualTotalDoors}</td></tr>
 				 <tr><td>Number of Lazy Susans:</td><td>${lazySusanQty}</td></tr>
-                 <tr><td>Hinge Count:</td><td>${hingeCount}</td></tr>
-				 <tr></tr>
-				 <tr></tr>
+                 <tr><td>Total "Door Units" (Doors + LSx2):</td><td>${displayedTotalDoors}</td></tr>
+				 <tr><td>Hinge Count:</td><td>${hingeCount}</td></tr>
+				 <tr><td colspan="2" style="padding:0.5em 0;"></td></tr> <!-- Spacer -->
                  <tr><td>Installation - Doors:</td><td>${formatCurrency(installation.doorInstall)}</td></tr>
                  <tr><td>Installation - Drawers:</td><td>${formatCurrency(installation.drawerInstall)}</td></tr>
                  <tr><td>Installation - Lazy Susans:</td><td>${formatCurrency(installation.lazySusanInstall)}</td></tr>
-				 <tr></tr>
-				 <tr></tr>
+                 <tr><td colspan="2" style="padding:0.5em 0;"></td></tr> <!-- Spacer -->
                  ${lazySusanSurchargeVal > 0 ? `<tr><td>Lazy Susan Surcharge Applied:</td><td>${formatCurrency(lazySusanSurchargeVal)}</td></tr>` : ''}
                  <tr><td>Cost To Installer (Materials + Hinge Drilling):</td><td>${costToInstaller}</td></tr>
                  <tr><td>Profit Margin:</td><td>${profitMargin}</td></tr>
@@ -604,10 +608,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 
-   console.log("script.js: DOMContentLoaded setup complete."); // Final Debug Log
+   console.log("script.js: DOMContentLoaded setup complete.");
 
 }); // End DOMContentLoaded
 
-console.log("script.js: File finished parsing."); // Log file end
+console.log("script.js: File finished parsing.");
 
-// --- END OF FILE script.js ---Attached are my updated build files. I have edited the CSS as well to make the app neumorphic. Please check these updates and return the code.
+// --- END OF FILE script.js ---Ok, please fix this code to allow the disposal dropdown to activate the disposal calculation. Attached are my newest files and code.
