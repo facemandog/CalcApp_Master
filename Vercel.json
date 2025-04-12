@@ -12,7 +12,7 @@
   ],
   "routes": [
     {
-      "src": "/calculate",
+      "src": "/(.*)",
       "dest": "server.js"
     }
   ]
