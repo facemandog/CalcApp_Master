@@ -1,10 +1,10 @@
-// --- START OF FILE api/index.js --- // FINAL VERSION
+// --- START OF FILE api/index.js --- // FINAL VERSION (Should be correct)
 
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
 // --- PATH CORRECTION: Go up one level to find calculation.js ---
-const { calculateOverallTotal } = require('../calculation.js');
+const { calculateOverallTotal } = require('../calculation.js'); // Needs calculation.js at root
 
 const app = express();
 // PORT is mainly for local development; Vercel assigns its own port dynamically
@@ -14,13 +14,13 @@ app.use(express.json()); // Middleware to parse JSON request bodies
 
 // --- PATH CORRECTION: Go up one level to find public directory ---
 // Serve static files from the 'public' directory at the project root
-app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use(express.static(path.join(__dirname, '..', 'public'))); // Needs public/ at root
 
 console.log("Attempting to load pricingData.json..."); // Keep this log for startup debugging
 let pricingData;
 try {
   // --- PATH CORRECTION: Go up one level to find pricingData.json ---
-  const pricingPath = path.join(__dirname, '..', 'pricingData.json');
+  const pricingPath = path.join(__dirname, '..', 'pricingData.json'); // Needs pricingData.json at root
   if (fs.existsSync(pricingPath)) {
       pricingData = JSON.parse(fs.readFileSync(pricingPath));
       console.log("Successfully loaded pricingData.json");
@@ -63,24 +63,41 @@ app.post('/calculate', (req, res) => {
   }
 });
 
-// Catch-all for any other request reaching the server function
-// This helps identify if requests are unexpectedly bypassing specific routes
-// You might want to remove this or have it serve index.html for SPA-like behavior
-// depending on whether other server routes are expected. For now, keep simple 404.
+// Catch-all for any other request reaching the server function AFTER static files
+// This helps identify if requests are unexpectedly bypassing specific routes OR
+// if static file serving isn't working as expected (though Vercel handles static first now)
 app.use((req, res) => {
-    // Don't escape here unless needed, keep it simple for now
     console.log(`Reached server catch-all in api/index.js for ${req.method} ${req.url}`);
-    res.status(404).send(`Server catch-all (api/index.js): Route ${req.method} ${req.url} not handled.`);
+    // Check if the request looks like it *should* have been a static file
+    if (req.url.includes('.') || req.url === '/') {
+        console.warn(`Request for potential static asset ${req.url} reached function catch-all. Check 'public' directory and vercel.json.`);
+        // Send a more specific 404 for static-like assets hitting the function
+        return res.status(404).send(`Function catch-all: Static asset ${escapeHTML(req.url)} not found or not served correctly.`);
+    }
+    // For other non-API routes hitting the function
+    res.status(404).send(`Function catch-all: Route ${escapeHTML(req.method)} ${escapeHTML(req.url)} not handled.`);
 });
+
+// Helper to prevent basic XSS in error messages
+function escapeHTML(str) {
+    if (!str) return '';
+    return str.replace(/[&<>'"]/g,
+      tag => ({
+          '&': '&', '<': '<', '>': '>',
+          "'": ''', '"': '"'
+      }[tag] || tag)
+    );
+}
 
 
 // --- IMPORTANT: Conditional Listening for LOCAL development ---
 // Vercel environment usually sets NODE_ENV to 'production'
+// You can run this locally using: node api/index.js
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
-    // Use 0.0.0.0 to listen on all available network interfaces locally if needed
-    // console.log(`Server running locally on http://localhost:${PORT} or http://<your-local-ip>:${PORT}`);
-    console.log(`Server running locally on http://localhost:${PORT}`);
+    console.log(`Server running locally for API testing on http://localhost:${PORT}`);
+    console.log(`Static files might not be served correctly from this local instance.`);
+    console.log(`Run 'node server.js' (if using it) for full local testing.`);
   });
 }
 
