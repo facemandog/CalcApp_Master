@@ -2,17 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "server.js",     
+      "src": "public/**/*",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "server.js", 
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/calculation",
-      "methods": ["POST"],    
-      "dest": "server.js"      
+      "src": "/calculate",
+      "dest": "server.js"
     }
-
-
   ]
 }
