@@ -84,11 +84,11 @@
         #priceSetupContainer.collapsed {
              flex-basis: var(--collapsed-width);
              width: var(--collapsed-width);
-             padding: 1em; /* Adjust padding to fit button */
+             padding: 3em; /* Adjust padding to fit button */
              min-width: var(--collapsed-width);
              box-shadow: var(--shadow-outset-concave);
              cursor: pointer;
-             justify-content: center; /* Center button vertically */
+             justify-content: var; /* Center button vertically */
              overflow: hidden; /* Ensure content clip */
          }
           /* Hide content, keep H2 */
@@ -198,7 +198,7 @@
          /* --- End Updated Remove Button --- */
 
          /* Toggle Buttons */
-         #togglePriceSetupBtn, #toggleInstructionsBtn, #toggleDetailsBtn { font-size: 0.9em; font-weight: 400; padding: 0.6em 1em; width: auto; background: var(--bg); box-shadow: var(--shadow-inset); border-radius: 0.8em; color: var(--fg); }
+         #togglePriceSetupBtn, #toggleInstructionsBtn, #toggleDetailsBtn { align-items: center;font-size: 0.9em; font-weight: 800; padding: 0.3em .6em; width: auto; background: var(--bg); box-shadow: var(--shadow-inset); border-radius: 0.8em; color: var(--fg); }
          #togglePriceSetupBtn:active, #toggleInstructionsBtn:active, #toggleDetailsBtn:active { box-shadow: var(--shadow-outset-concave); color: var(--primary); transform: translateY(1px); }
 
 
